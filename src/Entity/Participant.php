@@ -6,11 +6,16 @@ use App\Repository\ParticipantRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: ParticipantRepository::class)]
 #[ORM\UniqueConstraint(name: 'UNIQ_IDENTIFIER_MAIL', fields: ['mail'])]
+#[ORM\UniqueConstraint(name: 'UNIQ_IDENTIFIER_PSEUDO', fields: ['pseudo'])]
+#[UniqueEntity(fields: ['pseudo'])]
+#[UniqueEntity(fields: ['mail'])]
 class Participant implements UserInterface, PasswordAuthenticatedUserInterface
 {
     #[ORM\Id]
@@ -19,30 +24,40 @@ class Participant implements UserInterface, PasswordAuthenticatedUserInterface
     private ?int $id = null;
 
     #[ORM\Column(length: 180)]
+    #[Assert\NotBlank(message: "L'email doit être renseigné")]
+    #[Assert\Email(message: "L'email n'est pas valide")]
+    #[Assert\Length(max: 180, maxMessage: "L'email doit comporter {{ limit }} caractères maximum")]
     private ?string $mail = null;
-
-    /**
-     * @var list<string> The user roles
-     */
-    #[ORM\Column]
-    private array $roles = [];
 
     /**
      * @var string The hashed password
      */
     #[ORM\Column]
-    private ?string $password = null;
+    #[Assert\NotBlank(message: "Le mot de passe est requis")]
+    private ?string $motPasse = null;
+
 
     #[ORM\Column(length: 100)]
+    #[Assert\NotBlank(message: "Le nom est requis")]
+    #[Assert\Length(min:3, max:100, minMessage: 'Le nom doit comporter {{ limit }} caractères minimum', maxMessage: 'Le nom doit comporter {{ limit }} caractères maximum')]
+    #[Assert\Regex(pattern: '^[A-zÀ-ÿ-]{3,}$', message: 'Le nom comporte des caractères interdits')]
     private ?string $nom = null;
 
     #[ORM\Column(length: 100)]
+    #[Assert\NotBlank(message: "Le prénom est requis")]
+    #[Assert\Length(min:3, max:100, minMessage: 'Le prénom doit comporter {{ limit }} caractères minimum', maxMessage: 'Le prénom doit comporter {{ limit }} caractères maximum')]
+    #[Assert\Regex(pattern: '^[A-zÀ-ÿ-]+$', message: 'Le prénom comporte des caractères interdits')]
     private ?string $prenom = null;
 
     #[ORM\Column(length: 20)]
+    #[Assert\NotBlank(message: "Le téléphone est requis")]
+    #[Assert\Length(min:10, max:20, minMessage: 'Le téléphone doit comporter {{ limit }} caractères minimum', maxMessage: 'Le téléphone doit comporter {{ limit }} caractères maximum')]
+    #[Assert\Regex(pattern: '^[\d\- ]+$', message: 'Le téléphone comporte des caractères interdits')]
     private ?string $telephone = null;
 
     #[ORM\Column(length: 50)]
+    #[Assert\NotBlank(message: "Le pseudo est requis")]
+    #[Assert\Length(min:5, max:50, minMessage: 'Le pseudo doit comporter {{ limit }} caractères minimum', maxMessage: 'Le pseudo doit comporter {{ limit }} caractères maximum')]
     private ?string $pseudo = null;
 
     #[ORM\Column]
@@ -56,6 +71,7 @@ class Participant implements UserInterface, PasswordAuthenticatedUserInterface
 
     #[ORM\ManyToOne(inversedBy: 'participants')]
     #[ORM\JoinColumn(nullable: false)]
+    #[Assert\NotNull(message: "Le campus doit être renseigné")]
     private ?Campus $campus = null;
 
     /**
@@ -64,9 +80,16 @@ class Participant implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\OneToMany(targetEntity: Sortie::class, mappedBy: 'organisateur', orphanRemoval: true)]
     private Collection $sorties;
 
+    /**
+     * @var Collection<int, Sortie>
+     */
+    #[ORM\ManyToMany(targetEntity: Sortie::class, mappedBy: 'participants')]
+    private Collection $inscriptions;
+
     public function __construct()
     {
         $this->sorties = new ArrayCollection();
+        $this->inscriptions = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -103,34 +126,27 @@ class Participant implements UserInterface, PasswordAuthenticatedUserInterface
      */
     public function getRoles(): array
     {
-        $roles = $this->roles;
-        // guarantee every user at least has ROLE_USER
-        $roles[] = 'ROLE_USER';
-
-        return array_unique($roles);
+        return $this->administrateur ? ['ROLE_ADMIN'] : ['ROLE_USER'];
     }
 
-    /**
-     * @param list<string> $roles
-     */
-    public function setRoles(array $roles): static
-    {
-        $this->roles = $roles;
-
-        return $this;
-    }
 
     /**
      * @see PasswordAuthenticatedUserInterface
      */
     public function getPassword(): string
     {
-        return $this->password;
+        return $this->motPasse;
     }
 
-    public function setPassword(string $password): static
+    public function getMotPasse(): ?string
     {
-        $this->password = $password;
+        return $this->motPasse;
+    }
+
+
+    public function setMotPasse(string $password): static
+    {
+        $this->motPasse = $password;
 
         return $this;
     }
@@ -265,6 +281,33 @@ class Participant implements UserInterface, PasswordAuthenticatedUserInterface
             if ($sorty->getOrganisateur() === $this) {
                 $sorty->setOrganisateur(null);
             }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Sortie>
+     */
+    public function getInscriptions(): Collection
+    {
+        return $this->inscriptions;
+    }
+
+    public function addInscription(Sortie $inscription): static
+    {
+        if (!$this->inscriptions->contains($inscription)) {
+            $this->inscriptions->add($inscription);
+            $inscription->addParticipant($this);
+        }
+
+        return $this;
+    }
+
+    public function removeInscription(Sortie $inscription): static
+    {
+        if ($this->inscriptions->removeElement($inscription)) {
+            $inscription->removeParticipant($this);
         }
 
         return $this;

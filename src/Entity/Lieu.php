@@ -6,6 +6,7 @@ use App\Repository\LieuRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: LieuRepository::class)]
 class Lieu
@@ -16,19 +17,30 @@ class Lieu
     private ?int $id = null;
 
     #[ORM\Column(length: 50)]
+    #[Assert\NotBlank(message: 'Le nom doit être renseigné')]
+    #[Assert\Length(min: 3, max: 50, minMessage: 'Le nom doit comporter au moins {{ limit }} caractères', maxMessage: 'Le nom ne doit pas dépasser {{ limit }} caractères')]
+    #[Assert\Regex(pattern: '^[A-zÀ-ÿ-\' ]{3,}$', message: 'Le nom comporte des caractères interdits')]
     private ?string $nom = null;
 
     #[ORM\Column(length: 100)]
+    #[Assert\NotBlank(message: 'La rue doit être renseignée')]
+    #[Assert\Length(min: 3, max: 100, minMessage: 'La rue doit comporter au moins {{ limit }} caractères', maxMessage: 'La rue ne doit pas dépasser {{ limit }} caractères')]
+    #[Assert\Regex(pattern: '^[0-9A-zÀ-ÿ-\', ]{3,}$', message: 'La rue comporte des caractères interdits')]
     private ?string $rue = null;
 
     #[ORM\Column(nullable: true)]
+    #[Assert\Type('float', message: 'La latitude ne respecte pas le format requis')]
+    #[Assert\Range(notInRangeMessage: 'La latitude doit être comprise entre -90 et 90', min: -90, max: 90)]
     private ?float $latitude = null;
 
     #[ORM\Column(nullable: true)]
+    #[Assert\Type('float', message: 'La longitude ne respecte pas le format requis')]
+    #[Assert\Range(notInRangeMessage: 'La longitude doit être comprise entre -180 et 180', min: -180, max: 180)]
     private ?float $longitude = null;
 
     #[ORM\ManyToOne(inversedBy: 'lieus')]
     #[ORM\JoinColumn(nullable: false)]
+    #[Assert\NotNull(message: 'La ville est obligatoire')]
     private ?Ville $ville = null;
 
     /**

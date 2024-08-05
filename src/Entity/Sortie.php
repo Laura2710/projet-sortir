@@ -7,7 +7,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
-
+use Symfony\Component\Validator\Constraints as Assert;
 #[ORM\Entity(repositoryClass: SortieRepository::class)]
 class Sortie
 {
@@ -17,18 +17,29 @@ class Sortie
     private ?int $id = null;
 
     #[ORM\Column(length: 50)]
+    #[Assert\NotBlank(message: "Le nom est requis")]
+    #[Assert\Length(min:3, max:50, minMessage: 'Le nom doit comporter {{ limit }} caractères minimum', maxMessage: 'Le nom doit comporter {{ limit }} caractères maximum')]
+    #[Assert\Regex(pattern: '^[A-zÀ-ÿ- ]+$', message: 'Le nom comporte des caractères interdits')]
     private ?string $nom = null;
 
     #[ORM\Column(type: Types::DATETIME_MUTABLE)]
+    #[Assert\NotBlank(message: "La date de début de la sortie est requis")]
+    #[Assert\DateTime(message: "La date n'est pas valide")]
+    #[Assert\GreaterThan('today', message: 'La date doit être postérieure à celle d\'aujourd\'hui')]
     private ?\DateTimeInterface $dateHeureDebut = null;
 
     #[ORM\Column]
     private ?int $duree = null;
 
     #[ORM\Column(type: Types::DATE_MUTABLE)]
+    #[Assert\NotBlank(message: "La date de limite d'inscription est requis")]
+    #[Assert\Date(message: "La date de limite d'inscription n'est pas valide")]
+    #[Assert\LessThanOrEqual(propertyPath: 'dateHeureDebut')]
     private ?\DateTimeInterface $dateLimiteInscription = null;
 
     #[ORM\Column]
+    #[Assert\NotBlank(message: "Le nombre de places est requis")]
+    #[Assert\GreaterThan(0, message: 'Le nombre de places doit être supérieur à {{ limit }}')]
     private ?int $nbInscriptionsMax = null;
 
     #[ORM\Column(type: Types::TEXT, nullable: true)]
@@ -40,10 +51,12 @@ class Sortie
 
     #[ORM\ManyToOne(inversedBy: 'sorties')]
     #[ORM\JoinColumn(nullable: false)]
+    #[Assert\NotNull(message: "Un lieu doit être renseigné")]
     private ?Lieu $lieu = null;
 
     #[ORM\ManyToOne(inversedBy: 'sorties')]
     #[ORM\JoinColumn(nullable: false)]
+    #[Assert\NotNull(message: "Un campus doit être renseigné")]
     private ?Campus $campus = null;
 
     #[ORM\ManyToOne(inversedBy: 'sorties')]
@@ -53,13 +66,14 @@ class Sortie
     /**
      * @var Collection<int, Participant>
      */
-    #[ORM\ManyToMany(targetEntity: Participant::class, inversedBy: 'sorties')]
+    #[ORM\ManyToMany(targetEntity: Participant::class, inversedBy: 'inscriptions')]
     private Collection $participants;
 
     public function __construct()
     {
         $this->participants = new ArrayCollection();
     }
+
 
     public function getId(): ?int
     {
@@ -209,4 +223,5 @@ class Sortie
 
         return $this;
     }
+
 }
