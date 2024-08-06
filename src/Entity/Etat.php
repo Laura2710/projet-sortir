@@ -18,7 +18,7 @@ class Etat
     #[ORM\Column]
     private ?int $id = null;
 
-    #[ORM\Column(enumType: self::class)]
+    #[ORM\Column(enumType: EtatEnum::class)]
     private ?EtatEnum $libelle = null;
 
     /**
@@ -37,12 +37,12 @@ class Etat
         return $this->id;
     }
 
-    public function getLibelle(): ?self
+    public function getLibelle(): ?EtatEnum
     {
         return $this->libelle;
     }
 
-    public function setLibelle(self $libelle): static
+    public function setLibelle(EtatEnum $libelle): static
     {
         $this->libelle = $libelle;
 

@@ -16,28 +16,20 @@ class SortieRepository extends ServiceEntityRepository
         parent::__construct($registry, Sortie::class);
     }
 
-    //    /**
-    //     * @return Sortie[] Returns an array of Sortie objects
-    //     */
-    //    public function findByExampleField($value): array
-    //    {
-    //        return $this->createQueryBuilder('s')
-    //            ->andWhere('s.exampleField = :val')
-    //            ->setParameter('val', $value)
-    //            ->orderBy('s.id', 'ASC')
-    //            ->setMaxResults(10)
-    //            ->getQuery()
-    //            ->getResult()
-    //        ;
-    //    }
-
-    //    public function findOneBySomeField($value): ?Sortie
-    //    {
-    //        return $this->createQueryBuilder('s')
-    //            ->andWhere('s.exampleField = :val')
-    //            ->setParameter('val', $value)
-    //            ->getQuery()
-    //            ->getOneOrNullResult()
-    //        ;
-    //    }
+    public function findSorties()
+    {
+        return $this->createQueryBuilder('s')
+            ->join('s.campus', 'c')
+            ->addSelect('c')
+            ->join('s.etat', 'e')
+            ->addSelect('e')
+            ->join('s.organisateur', 'o')
+            ->addSelect('o')
+            ->join('s.lieu', 'l')
+            ->addSelect('l')
+            ->where('s.dateHeureDebut > :date')
+            ->setParameter('date', new \DateTime('-1 month'))
+            ->getQuery()
+            ->getResult();
+    }
 }
