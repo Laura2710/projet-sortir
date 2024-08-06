@@ -15,7 +15,7 @@ class SortieFiltreType extends AbstractType
 {
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
-        // Récupérer l'utilisateur connecté
+        // TODO Récupérer l'utilisateur connecté
         // $utilisateur = $options['utilisateur'];
 
         $builder
@@ -25,7 +25,7 @@ class SortieFiltreType extends AbstractType
                 'choice_value' => 'id',
                 'required' => true,
                 'label' => 'Campus',
-                //'data' => $utilisateur->getCampus()
+                // TODO 'data' => $utilisateur->getCampus()
             ])
             ->add('nomSortie', TextType::class, [
                 'label' => 'Le nom de la sortie contient',
