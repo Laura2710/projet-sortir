@@ -20,11 +20,10 @@ class SortieFixtures extends Fixture implements OrderedFixtureInterface
 
         $faker = Factory::create('fr_FR');
 
-        for ($i = 1; $i <= 10; $i++) {
-            $organisateur = $participants[array_rand($participants)];
+        for ($i = 1; $i <= 30; $i++) {
+            $organisateur = $faker->randomElement($participants);
             $campus = $organisateur->getCampus();
-            $lieu = $lieux[array_rand($lieux)];
-            $dateDebut = $faker->dateTimeBetween('-2 month', '+1 month');
+            $dateDebut = $faker->dateTimeBetween('-2 month', '+2 month');
             $heureDebut = $faker->numberBetween(14,22);
             $dateDebut->setTime($heureDebut, 0);
 
@@ -34,9 +33,10 @@ class SortieFixtures extends Fixture implements OrderedFixtureInterface
             $sortie = new Sortie();
             $sortie->setOrganisateur($organisateur);
             $sortie->setCampus($campus);
-            $sortie->setLieu($lieu);
+            $sortie->setLieu($faker->randomElement($lieux));
 
-            $sortie->setNom($faker->word(4));
+            $nomsSortie = ['Randonnée', 'Pique-Nique', 'Exposition', 'Cinema', 'Atelier cuisine', 'Apero'];
+            $sortie->setNom($faker->randomElement($nomsSortie));
             $sortie->setDateHeureDebut($dateDebut);
             $sortie->setDateLimiteInscription($dateCloture);
             $sortie->setNbInscriptionsMax(8);
@@ -58,7 +58,8 @@ class SortieFixtures extends Fixture implements OrderedFixtureInterface
             } elseif ($dateCloture < $now) {
                 $sortie->setEtat($manager->getRepository(Etat::class)->findOneBy(['libelle' => 'Cloturee']));
             } else {
-                $sortie->setEtat($manager->getRepository(Etat::class)->findOneBy(['libelle' => 'Ouverte']));
+                $choix = ['Ouverte', 'Créée'];
+                $sortie->setEtat($manager->getRepository(Etat::class)->findOneBy(['libelle' => $faker->randomElement($choix)]));
             }
 
             $manager->persist($sortie);

@@ -18,7 +18,7 @@
     {% endblock %}
 </head>
 <body>
-{#  {% if app.user %} #}
+{% if app.user %}
 <header>
     <div class="container">
         <a href="{{ path('sortie_liste') }}" class="logo">Sortir.com</a>
@@ -33,7 +33,23 @@
         </nav>
     </div>
 </header>
-{#    {% endif %} #}
+    {% for type, messages in app.flashes %}
+        {% for message in messages %}
+            <div class="flash-message flash-{{ type }}">
+                <p>{{ message }}</p>
+            </div>
+        {% endfor %}
+    {% endfor %}
+
+    <div class="container">
+        <div class="infoUtilisateurConnecte">
+            <div>
+                <p>Date du jour: {{ "now"|date('d/m/Y') }}</p>
+                <p>Participant: {{ app.user.prenom }}.{{ app.user.nom|first }}</p>
+            </div>
+        </div>
+    </div>
+{% endif %}
 <div class="container">
     {% block body %}{% endblock %}
 </div>

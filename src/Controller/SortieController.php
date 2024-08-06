@@ -2,9 +2,15 @@
 
 namespace App\Controller;
 
+use App\Entity\Etat;
+use App\Entity\Sortie;
+use App\Enum\EtatEnum;
 use App\FiltreSortie\FiltreSortie;
+use App\Form\AnnulationSortieType;
 use App\Form\SortieFiltreType;
+use App\Repository\EtatRepository;
 use App\Repository\SortieRepository;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -16,16 +22,127 @@ class SortieController extends AbstractController
     public function liste(Request $request, SortieRepository $sortieRepository): Response
     {
         $filtre = new FiltreSortie();
+        $filtre->setCampus($this->getUser()->getCampus());
         $formulaire_filtre = $this->createForm(SortieFiltreType::class, $filtre);
         $formulaire_filtre->handleRequest($request);
 
         $sorties = $formulaire_filtre->isSubmitted() && $formulaire_filtre->isValid()
             ? $sortieRepository->findByCriteres($filtre, $this->getUser())
-            : $sortieRepository->findSorties();
+            : $sortieRepository->findSorties($this->getUser());
 
         return $this->render('sortie/liste.html.twig', [
             'sorties' => $sorties,
             'formulaire_filtres' => $formulaire_filtre->createView()
         ]);
+    }
+
+    #[Route('/sortie/{id}', name: 'sortie_detail', methods: ['GET'])]
+    public function show(Sortie $sortieParam, SortieRepository $sortieRepository): Response
+    {
+        $sortie = $sortieRepository->findSortie($sortieParam);
+        if (!$sortie || $sortie->getEtat()->getLibelle() == 'Créée') {
+            return $this->redirectToRoute('sortie_liste');
+        }
+        return $this->render('sortie/detail.html.twig', [
+            'sortie' => $sortie,
+        ]);
+    }
+
+    #[Route('/sortie/annuler/{id}', name: 'sortie_annuler', methods: ['GET', 'POST'])]
+    public function annuler(
+        int                    $id,
+        Request                $request,
+        SortieRepository       $sortieRepository,
+        EntityManagerInterface $entityManager,
+        EtatRepository         $etatRepository
+    ): Response
+    {
+        $sortie = $sortieRepository->find($id);
+
+        if ($sortie == null || $sortie->getOrganisateur() != $this->getUser() || !$this - $this->isGranted('ROLE_ADMIN')) {
+            $this->addFlash('error', "Accès interdit.");
+            return $this->redirectToRoute('sortie_liste');
+        }
+
+        if ($sortie->getEtat()->getLibelle()->value == 'Ouverte' && new \DateTime() <= $sortie->getDateHeureDebut()) {
+            $formAnnulation = $this->createForm(AnnulationSortieType::class);
+            $formAnnulation->handleRequest($request);
+
+            if ($formAnnulation->isSubmitted() && $formAnnulation->isValid()) {
+                $etat = $etatRepository->findOneBy(['libelle' => 'Annulée']);
+                $sortie->setEtat($etat);
+                $sortie->setInfosSortie($formAnnulation->get('motifAnnulation')->getData());
+                $entityManager->flush();
+                $this->addFlash('success', 'La sortie a bien été annulée !');
+                return $this->redirectToRoute('sortie_detail', ['id' => $sortie->getId()]);
+            }
+
+        } else {
+            $this->addFlash('error', "Vous ne pouvez pas annuler la sortie !");
+            return $this->redirectToRoute('sortie_liste');
+        }
+
+        return $this->render('sortie/annuler.html.twig', [
+            'formAnnulation' => $formAnnulation,
+            'sortie' => $sortie,
+        ]);
+    }
+
+    #[Route('/sortie/supprimer/{id}', name: 'sortie_supprimer', methods: ['GET'])]
+    public function supprimer(int $id, SortieRepository $sortieRepository, EntityManagerInterface $entityManager): Response
+    {
+        $sortie = $sortieRepository->find($id);
+        if (!$sortie) {
+            $this->addFlash('error', 'La sortie n\'existe pas.');
+            return $this->redirectToRoute('sortie_liste');
+        }
+
+        if ($sortie->getEtat()->getLibelle()->value == 'Créée' && $sortie->getOrganisateur() == $this->getUser()) {
+            $entityManager->remove($sortie);
+            $entityManager->flush();
+        }
+
+        $this->addFlash('success', 'La sortie a bien été supprimée');
+        return $this->redirectToRoute('sortie_liste');
+    }
+
+    #[Route('/sortie/publier/{id}', name: 'sortie_publier', methods: ['GET'])]
+    public function publier(
+        int                    $id,
+        EntityManagerInterface $entityManager,
+        SortieRepository       $sortieRepository,
+        EtatRepository $etatRepository,
+    ): Response
+    {
+
+        $sortie = $sortieRepository->find($id);
+
+        // Vérifie si la sortie existe
+        if (!$sortie) {
+            $this->addFlash('error', 'La sortie n\'existe pas.');
+            return $this->redirectToRoute('sortie_liste');
+        }
+
+        $etatLibelle = $sortie->getEtat()->getLibelle()->value;
+
+        // Si la sortie n'est pas en création ou si l'utilisateur n'est l'organisateur
+        if ($etatLibelle !== 'Créée' || $sortie->getOrganisateur() !== $this->getUser()) {
+            $this->addFlash('error', 'Accès interdit. Vous n\'êtes pas autorisé à publier cette sortie.');
+            return $this->redirectToRoute('sortie_liste');
+        }
+
+        // Si la date de début de l'événement n'est pas dans le futur
+        if ($sortie->getDateHeureDebut() <= new \DateTime()) {
+            $this->addFlash('error', 'La date de début doit être dans le futur pour publier la sortie.');
+            return $this->redirectToRoute('sortie_liste');
+        }
+
+        $nouvelEtat = $etatRepository->findOneBy(['libelle' => 'Ouverte']);
+        $nouvelEtat->setLibelle(EtatEnum::Ouverte);
+        $sortie->setEtat($nouvelEtat);
+        $entityManager->flush();
+
+        $this->addFlash('success', 'La sortie a bien été publiée.');
+        return $this->redirectToRoute('sortie_liste');
     }
 }

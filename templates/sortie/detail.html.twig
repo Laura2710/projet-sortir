@@ -1,0 +1,70 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}
+    {{ sortie.nom }}
+{% endblock %}
+
+{% block body %}
+    {% set className = '' %}
+
+    {% if sortie.etat.libelle.value == 'Ouverte' %}
+        {% set className = 'ouverte' %}
+    {% elseif sortie.etat.libelle.value == 'Cloturee' %}
+        {% set className = 'cloturee' %}
+    {% elseif sortie.etat.libelle.value == 'Annulée' or ortie.etat.libelle.value == 'Activité passée' %}
+        {% set className = 'annulee' %}
+    {% else %}
+        {% set className = '' %}
+    {% endif %}
+
+
+    <h1>Detail de la sortie : {{ sortie.nom }}<br>
+        <span class="etat-sortie {{ className }}">{{ className }}</span>
+    </h1>
+    <div class="flex detail-sortie">
+        <div>
+            <p><span>Nom de la sortie:</span> {{ sortie.nom }}</p>
+            <p><span>Organisateur:</span> {{ sortie.organisateur.prenom }} {{ sortie.organisateur.nom }} </p>
+            <p><span>Date et heure de la sortie:</span> le {{ sortie.dateHeureDebut|date('d/m/Y') }} à {{ sortie.dateHeureDebut|date('H:i') }}</p>
+            <p><span>Date limite d'inscription:</span> le {{ sortie.dateLimiteInscription|date('d/m/Y') }}</p>
+            <p><span>Nombre de place:</span> {{ sortie.nbInscriptionsMax }}</p>
+            <p><span>Durée:</span> {{ sortie.duree }} minutes</p>
+            <p><span>Description et infos:</span> {{ sortie.infosSortie }}</p>
+        </div>
+        <div>
+            <p><span>Campus:</span> {{ sortie.campus.nom }}</p>
+            <p><span>Lieu: </span>{{ sortie.lieu.nom }}</p>
+            <p><span>Rue: </span>{{ sortie.lieu.rue }}</p>
+            <p><span>Code postal:</span> {{ sortie.lieu.ville.codePostal }}</p>
+            <p><span>Latitude:</span> {{ sortie.lieu.latitude|default('non renseignée') }}</p>
+            <p><span>Longitude:</span> {{ sortie.lieu.longitude|default('non renseignée') }}</p>
+        </div>
+    </div>
+
+
+    <table class="table-participants">
+        <thead>
+        <tr>
+            <th>Pseudo</th>
+            <th>Nom</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% if sortie.participants is not empty %}
+            {% for participant in sortie.participants %}
+                <tr>
+                    <td>{{ participant.pseudo }}</td>
+                    <td>{{ participant.prenom }} {{ participant.nom }}</td>
+                </tr>
+            {% endfor %}
+        {% else %}
+            <tr>
+                <td colspan="2">Aucun participant</td>
+            </tr>
+        {% endif %}
+        </tbody>
+    </table>
+
+
+{% endblock %}
+
