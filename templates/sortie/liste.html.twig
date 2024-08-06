@@ -1,0 +1,67 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+    <h1>Bienvenue sur Sortie.com !</h1>
+    <h2>Filtrer les sorties</h2>
+    {{ form_start(formulaire_filtres, {'attr': {'class':'formulaire-filtre'}}) }}
+    {{ form_row(formulaire_filtres.campus) }}
+    <div class="flex">
+        <div>
+            {{ form_row(formulaire_filtres.nomSortie) }}
+            {{ form_row(formulaire_filtres.dateDebutSortie) }}
+            {{ form_row(formulaire_filtres.dateFinSortie) }}
+
+        </div>
+        <div class="container-checkbox">
+            {{ form_row(formulaire_filtres.estOrganisateur) }}
+            {{ form_row(formulaire_filtres.estInscrit) }}
+            {{ form_row(formulaire_filtres.nonInscrit) }}
+            {{ form_row(formulaire_filtres.sortiesPassees) }}
+            <button type="submit" class="btn-secondaire">Filtrer</button>
+        </div>
+    </div>
+    {{ form_end(formulaire_filtres) }}
+
+    <table class="liste-sorties">
+        <thead>
+        <tr>
+            <th>Nom de la sortie</th>
+            <th>Date de la sortie</th>
+            <th>Clôture</th>
+            <th>Inscrits/places</th>
+            <th>Etat</th>
+            <th>Inscrit</th>
+            <th>Organisateur</th>
+            <th>Actions</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr>
+            <td>Philo</td>
+            <td>19/07/2018 23:45</td>
+            <td>19/07/2018</td>
+            <td>8/8</td>
+            <td>En cours</td>
+            <td>X</td>
+            <td>Spinoz A.</td>
+            <td>
+                <div class="flex">
+                    <a href="">Afficher</a>
+                    {#
+                    <a href="">S'inscrire</a>
+                    <a href="">Se desister</a>
+                    <a href="">Modifier</a>
+                    <a href="">Publier</a>
+                    <a href="">Annuler</a>
+                    #}
+                </div>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+{% endblock %}
+
+{% block title %}
+    Accueil | Sortie.com
+{% endblock %}
+
