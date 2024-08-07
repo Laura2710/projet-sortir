@@ -19,12 +19,12 @@ class Ville
     #[ORM\Column(length: 50)]
     #[Assert\NotBlank(message: "Le nom est requis")]
     #[Assert\Length(min:3, max:50, minMessage: 'Le nom doit comporter {{ limit }} caractères minimum', maxMessage: 'Le nom doit comporter {{ limit }} caractères maximum')]
-    #[Assert\Regex(pattern: '^[A-zÀ-ÿ- ]+$', message: 'Le nom comporte des caractères interdits')]
+    #[Assert\Regex(pattern: '/^[A-zÀ-ÿ- ]+$/', message: 'Le nom comporte des caractères interdits')]
     private ?string $nom = null;
 
     #[ORM\Column(length: 5)]
     #[Assert\NotBlank(message: "Le code postal est requis")]
-    #[Assert\Regex(pattern: '^[\d]{5}$', message: 'Le code postal ne respecte pas le format requis')]
+    #[Assert\Regex(pattern: '/^[\d]{5}$/', message: 'Le code postal ne respecte pas le format requis')]
     private ?string $codePostal = null;
 
     /**

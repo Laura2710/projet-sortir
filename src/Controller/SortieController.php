@@ -5,9 +5,11 @@ namespace App\Controller;
 use App\Entity\Sortie;
 use App\Enum\EtatEnum;
 use App\FiltreSortie\FiltreSortie;
+use App\Form\CreerSortieType;
 use App\Form\AnnulationSortieType;
 use App\Form\SortieFiltreType;
 use App\Repository\EtatRepository;
+use App\Repository\LieuRepository;
 use App\Repository\SortieRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -54,7 +56,7 @@ class SortieController extends AbstractController
 
     }
 
-    #[Route('/sortie/{id}', name: 'sortie_detail', methods: ['GET'])]
+    #[Route('/sortie/{id}', name: 'sortie_detail', requirements: ['id' => '\d+'], methods: ['GET'])]
     public function show(Sortie $sortieParam, SortieRepository $sortieRepository): Response
     {
         $sortie = $sortieRepository->findSortie($sortieParam);
@@ -169,6 +171,30 @@ class SortieController extends AbstractController
         $this->addFlash('success', 'La sortie a bien été publiée.');
         return $this->redirectToRoute('sortie_liste');
     }
+
+    #[Route('/sortie/creer', name: 'sortie_creer', methods: ['GET', 'POST'])]
+    public function creer(Request $request, LieuRepository $lieuRepository, EntityManagerInterface $entityManager, EtatRepository $etatRepository): Response
+    {
+
+        $sortie = new Sortie();
+        $lieux = $lieuRepository->findAll();
+        $user = $this->getUser();
+        $sortie->setCampus($this->getUser()->getCampus());
+        $creerSortieForm = $this->createForm(CreerSortieType::class, $sortie, ['lieux'=>$lieux]);
+
+        $creerSortieForm->handleRequest($request);
+        if ($creerSortieForm->isSubmitted()) {
+            $sortie->setOrganisateur($user);
+            $etat = $etatRepository->findOneBy(['libelle'=>EtatEnum::Creee]);
+            $sortie->setEtat($etat);
+
+            $entityManager->persist($sortie);
+            $entityManager->flush();
+            return $this->redirectToRoute('sortie_liste');
+        }
+
+        return $this->render('sortie/creer.html.twig', [
+            'creerSortieForm' => $creerSortieForm->createView(),
+        ]);
+    }
 }
-
-

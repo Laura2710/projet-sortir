@@ -1,0 +1,21 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}
+
+{% endblock %}
+
+{% block body %}
+    <div>
+        {{ form_start(creerSortieForm) }}
+
+        {{ form_widget(creerSortieForm) }}
+
+        <button>Enregistrer</button>
+        <button>Publier la sortie</button>
+        <button>Annuler</button>
+
+        {{ form_end(creerSortieForm) }}
+    </div>
+
+{% endblock %}
+

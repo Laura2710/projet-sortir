@@ -19,7 +19,7 @@ class Sortie
     #[ORM\Column(length: 50)]
     #[Assert\NotBlank(message: "Le nom est requis")]
     #[Assert\Length(min:3, max:50, minMessage: 'Le nom doit comporter {{ limit }} caractères minimum', maxMessage: 'Le nom doit comporter {{ limit }} caractères maximum')]
-    #[Assert\Regex(pattern: '^[A-zÀ-ÿ- ]+$', message: 'Le nom comporte des caractères interdits')]
+    #[Assert\Regex(pattern: '/^[A\-zÀ\-ÿ\- ]+$/', message: 'Le nom comporte des caractères interdits')]
     private ?string $nom = null;
 
     #[ORM\Column(type: Types::DATETIME_MUTABLE)]
