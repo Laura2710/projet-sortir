@@ -39,7 +39,8 @@ class SortieController extends AbstractController
     public function show(Sortie $sortieParam, SortieRepository $sortieRepository): Response
     {
         $sortie = $sortieRepository->findSortie($sortieParam);
-        if (!$sortie || $sortie->getEtat()->getLibelle() == 'Créée') {
+        if (!$sortie || $sortie->getEtat()->getLibelle()->value == 'Créée' || $sortie->getEtat()->getLibelle()->value == 'Activité passée') {
+            $this->addFlash('error', 'Accès interdit.');
             return $this->redirectToRoute('sortie_liste');
         }
         return $this->render('sortie/detail.html.twig', [
@@ -60,7 +61,7 @@ class SortieController extends AbstractController
 
         // Si l'utilisateur n'est pas l'organisateur ou l'administrateur alors rediriger avec un message d'erreur
         if ($sortie == null || $sortie->getOrganisateur() != $this->getUser() || !$this - $this->isGranted('ROLE_ADMIN')) {
-            $this->addFlash('error', "Accès interdit.");
+            $this->addFlash('error', "Accès interdit. Vous n\'êtes pas autorisé à annuler cette sortie.");
             return $this->redirectToRoute('sortie_liste');
         }
 
@@ -79,7 +80,7 @@ class SortieController extends AbstractController
             }
 
         } else {
-            $this->addFlash('error', "Vous ne pouvez pas annuler la sortie !");
+            $this->addFlash('error', "Vous ne pouvez pas annuler la sortie.");
             return $this->redirectToRoute('sortie_liste');
         }
 
@@ -104,9 +105,9 @@ class SortieController extends AbstractController
         if ($sortie->getEtat()->getLibelle()->value == 'Créée' && $sortie->getOrganisateur() == $this->getUser()) {
             $entityManager->remove($sortie);
             $entityManager->flush();
+            $this->addFlash('success', 'La sortie a bien été supprimée');
         }
 
-        $this->addFlash('success', 'La sortie a bien été supprimée');
         return $this->redirectToRoute('sortie_liste');
     }
 
