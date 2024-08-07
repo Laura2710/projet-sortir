@@ -4,6 +4,7 @@ namespace App\Repository;
 
 use App\Entity\Sortie;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\ORM\QueryBuilder;
 use Doctrine\Persistence\ManagerRegistry;
 
 /**
@@ -16,7 +17,7 @@ class SortieRepository extends ServiceEntityRepository
         parent::__construct($registry, Sortie::class);
     }
 
-    public function findSorties()
+    public function queryBuilderSortie($utilisateur = null) : QueryBuilder
     {
         return $this->createQueryBuilder('s')
             ->join('s.campus', 'c')
@@ -29,7 +30,18 @@ class SortieRepository extends ServiceEntityRepository
             ->addSelect('l')
             ->leftJoin('s.participants', 'p')
             ->addSelect('p')
-            ->where('s.dateHeureDebut > :date')
+            ->andWhere('(e.libelle <> \'Créée\' OR o = :utilisateur)')
+            ->setParameter('utilisateur', $utilisateur);
+
+
+    }
+    public function findSorties($utilisateur)
+    {
+
+        return $this->queryBuilderSortie($utilisateur)
+            ->andWhere('c = :campus')
+            ->setParameter('campus', $utilisateur->getCampus())
+            ->andWhere('DATE_ADD(s.dateHeureDebut, s.duree, \'MINUTE\') > :date')
             ->setParameter('date', new \DateTime('-1 month'))
             ->orderBy('s.dateHeureDebut', 'DESC')
             ->getQuery()
@@ -38,56 +50,40 @@ class SortieRepository extends ServiceEntityRepository
 
     public function findByCriteres($filtre, $utilisateur)
     {
-        dump($filtre, $utilisateur);
-        $query = $this->createQueryBuilder('s')
-            ->join('s.campus', 'c')
-            ->addSelect('c')
-            ->join('s.etat', 'e')
-            ->addSelect('e')
-            ->join('s.organisateur', 'o')
-            ->addSelect('o')
-            ->join('s.lieu', 'l')
-            ->addSelect('l')
-            ->leftJoin('s.participants', 'p')
-            ->addSelect('p');
 
-
-        // Si la case organisateur est cochée
-        if ($filtre->getEstOrganisateur()) {
-            $query->orWhere('s.organisateur = :organisateur')
-                ->setParameter('organisateur', $utilisateur);
-        } else {
-            $query->andWhere('s.organisateur <> :organisateur')
-                ->setParameter('organisateur', $utilisateur);
-        }
+        $query = $this->queryBuilderSortie($utilisateur);
 
         // Si la case "inscrit" est cochée
         if ($filtre->getEstInscrit()) {
-            $query->orWhere(':inscrit MEMBER OF s.participants')
+            $query->andWhere(':inscrit MEMBER OF s.participants')
                 ->setParameter('inscrit', $utilisateur);
         }
 
         // Si la case "non inscrit" est cochée
         if ($filtre->getNonInscrit()) {
-            $query->orWhere(':inscrit NOT MEMBER OF s.participants')
+            $query->andWhere(':inscrit NOT MEMBER OF s.participants AND s.organisateur != :inscrit')
                 ->setParameter('inscrit', $utilisateur);
         }
 
-        // Si la case "sortie passée" est décochée
+        // Si la case "sortie passée" est cochée
         if ($filtre->getSortiesPassees()) {
-            $query->orWhere('s.dateHeureDebut <= :date')
+            $query->andWhere('DATE_ADD(s.dateHeureDebut, s.duree, \'MINUTE\') <= :date')
                 ->setParameter('date', new \DateTime('-1 month'));
         }
         else {
-            $query->andWhere('s.dateHeureDebut > :date')
+            $query->andWhere('DATE_ADD(s.dateHeureDebut, s.duree, \'MINUTE\') > :date')
                 ->setParameter('date', new \DateTime('-1 month'));
         }
 
+        // Si la case organisateur est cochée
+        if ($filtre->getEstOrganisateur()) {
+            $query->andWhere('s.organisateur = :organisateur')
+                ->setParameter('organisateur', $utilisateur);
+        }
 
         if ($filtre->getNomSortie()) {
-            $nomSortie = trim($filtre->getNomSortie());
             $query->andWhere('s.nom LIKE :nomSortie')
-                ->setParameter('nomSortie', '%' . $nomSortie . '%');
+                ->setParameter('nomSortie', '%' .$filtre->getNomSortie(). '%');
         }
 
         if ($filtre->getDateDebutSortie()) {
@@ -102,12 +98,22 @@ class SortieRepository extends ServiceEntityRepository
                 ->setParameter('dateFin', $dateFin);
         }
 
-
         return $query->andWhere('s.campus = :campus')
             ->setParameter('campus', $filtre->getCampus())
             ->orderBy('s.dateHeureDebut', 'DESC')
             ->getQuery()
             ->getResult();
 
+    }
+
+    public function findSortie(Sortie $sortie)
+    {
+        return $this->queryBuilderSortie()
+            ->join('l.ville', 'v')
+            ->addSelect('v')
+            ->andWhere('s = :sortie')
+            ->setParameter('sortie', $sortie)
+            ->getQuery()
+            ->getOneOrNullResult();
     }
 }
