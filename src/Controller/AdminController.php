@@ -4,8 +4,10 @@ namespace App\Controller;
 
 use App\Entity\Campus;
 use App\Entity\Participant;
+use App\Form\RegistrationFormType;
 use App\Form\UploadParticipantType;
 use App\Repository\CampusRepository;
+use App\Repository\ParticipantRepository;
 use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 use Doctrine\ORM\EntityManagerInterface;
 use League\Csv\Reader;
@@ -21,13 +23,23 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
 #[Route('/admin', name: 'admin_')]
 class AdminController extends AbstractController
 {
-    #[Route('/creer-utilisateurs', name: 'creer_utilisateurs')]
-    public function creerUtilisateurs(
+    #[Route('/utilisateurs', name: 'utilisateurs')]
+    public function gererUtilisateurs(ParticipantRepository $participantRepository): Response
+    {
+        $participants = $participantRepository->findParticipants($this->getUser());
+        return $this->render('admin/utilisateurs-gestion.html.twig', [
+            'participants' => $participants
+        ]);
+    }
+
+
+    #[Route('/utilisateurs/upload', name: 'utilisateurs_upload', methods: ['GET', 'POST'])]
+    public function uploaderUtilisateurs(
         Request                     $request,
         UserPasswordHasherInterface $passwordHasher,
         CampusRepository            $campusRepository,
         EntityManagerInterface      $entityManager,
-        ValidatorInterface          $validator ): Response
+        ValidatorInterface          $validator): Response
     {
         $formUpload = $this->createForm(UploadParticipantType::class);
         $formUpload->handleRequest($request);
@@ -44,7 +56,7 @@ class AdminController extends AbstractController
                             if (!$campus) {
                                 $this->addFlash('error', "Le campus {$record['campus']} n'existe pas.");
                                 $entityManager->rollback();
-                                return $this->redirectToRoute('admin_creer_utilisateurs');
+                                return $this->redirectToRoute('admin_utilisateurs_upload');
                             }
                             $participant = $this->getParticipant($record, $passwordHasher, $campus);
                             $entityManager->persist($participant);
@@ -52,7 +64,7 @@ class AdminController extends AbstractController
                         $entityManager->flush();
                         $entityManager->commit();
                         $this->addFlash('success', "Les utilisateurs ont bien été ajoutés !");
-
+                        $this->redirectToRoute('admin_utilisateurs_upload');
                     } catch (UniqueConstraintViolationException $e) {
                         $this->addFlash('error', "L'opération a été annulée. Un participant avec l'email '{$record['email']}' existe déjà.");
                         $entityManager->rollback();
@@ -64,13 +76,81 @@ class AdminController extends AbstractController
             }
 
         }
-        return $this->render('admin/creer-utilisateurs.html.twig', [
+        return $this->render('admin/utilisateurs-upload.html.twig', [
             'formUpload' => $formUpload->createView()
         ]);
     }
 
+    #[Route('/utilisateur/creer', name: 'utilisateur_creer', methods: ['GET', 'POST'])]
+    public function creerUtilisateur(Request $request, UserPasswordHasherInterface $userPasswordHasher, EntityManagerInterface $entityManager): Response
+    {
+        $participant = new Participant();
+        $form = $this->createForm(RegistrationFormType::class, $participant);
+        $form->handleRequest($request);
 
-    public function getParticipant(mixed $record, UserPasswordHasherInterface $passwordHasher, Campus $campus): Participant
+        if ($form->isSubmitted() && $form->isValid()) {
+            // encoder le mot de passe
+            $participant->setMotPasse(
+                $userPasswordHasher->hashPassword(
+                    $participant,
+                    $form->get('plainPassword')->getData()
+                )
+            );
+            $participant->setAdministrateur(false);
+            $participant->setActif(true);
+
+            $entityManager->persist($participant);
+            $entityManager->flush();
+            $this->addFlash('success', "L'utilisateur a bien été créé");
+            $this->redirectToRoute('admin_utilisateurs');
+        }
+
+        return $this->render('admin/utilisateur-creer.html.twig', ['registrationForm' => $form]);
+    }
+
+    #[Route('/utilisateur/activer/{id}', name: 'utilisateur_activer', methods: ['GET'])]
+    public function desactiverUtilisateur(int $id, EntityManagerInterface $entityManager): Response
+    {
+        $participant = $entityManager->find(Participant::class, $id);
+        if (!$participant) {
+            $this->addFlash('error', "L'utilisateur n'existe pas.");
+            return $this->redirectToRoute('admin_utilisateurs');
+        }
+        if ($participant->isAdministrateur()) {
+            $this->addFlash('error', "Action interdite");
+            return $this->redirectToRoute('admin_utilisateurs');
+        }
+
+        $participant->isActif() ? $participant->setActif(false) : $participant->setActif(true);
+        $entityManager->flush();
+
+
+        $action = $participant->isActif() ? 'activé' : 'désactivé';
+        $message = sprintf('Le compte de %s a été %s avec succès.', $participant->getPseudo(), $action);
+        $this->addFlash('success', $message);
+
+        return $this->redirectToRoute('admin_utilisateurs');
+    }
+
+    #[Route('/utilisateur/supprimer/{id}', name: 'utilisateur_supprimer', methods: ['GET'])]
+    public function supprimerUtilisateur(int $id, EntityManagerInterface $entityManager): Response
+    {
+        $participant = $entityManager->find(Participant::class, $id);
+        if (!$participant) {
+            $this->addFlash('error', "L'utilisateur n'existe pas.");
+            return $this->redirectToRoute('admin_utilisateurs');
+        }
+        if ($participant->isAdministrateur()) {
+            $this->addFlash('error', "Action interdite");
+            return $this->redirectToRoute('admin_utilisateurs');
+        }
+        $entityManager->remove($participant);
+        $entityManager->flush();
+        $this->addFlash('success', "L'utilisateur a été supprimé!");
+        return $this->redirectToRoute('admin_utilisateurs');
+    }
+
+    private function getParticipant(mixed $record, UserPasswordHasherInterface $passwordHasher, Campus $campus): Participant
     {
         $participant = new Participant();
         $participant->setNom($record['nom']);
@@ -87,8 +167,7 @@ class AdminController extends AbstractController
         return $participant;
     }
 
-
-    public function isCSV(ValidatorInterface $validator, mixed $fichier): bool
+    private function isCSV(ValidatorInterface $validator, mixed $fichier): bool
     {
         $violations = $validator->validate($fichier,
             new File([
@@ -106,7 +185,7 @@ class AdminController extends AbstractController
         return true;
     }
 
-    public function lireDonneesCVS(mixed $fichier): \Iterator
+    private function lireDonneesCVS(mixed $fichier): \Iterator
     {
         $csv = Reader::createFromPath($fichier->getRealPath(), 'r');
         $csv->setHeaderOffset(0);

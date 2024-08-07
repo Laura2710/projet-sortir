@@ -27,6 +27,7 @@
             {% if is_granted('ROLE_ADMIN') %}
                 <a href="">Villes</a>
                 <a href="">Campus</a>
+                <a href="{{ path('admin_utilisateurs') }}">Utilisateurs</a>
             {% endif %}
             <a href="{{ path('sortie_liste') }}">Accueil</a>
             <a href="">Mon profil</a>

@@ -33,7 +33,7 @@ class Participant implements UserInterface, PasswordAuthenticatedUserInterface
      * @var string The hashed password
      */
     #[ORM\Column]
-    #[Assert\NotBlank(message: "Le mot de passe est requis")]
+    //#[Assert\NotBlank(message: "Le mot de passe est requis")]
     private ?string $motPasse = null;
 
 

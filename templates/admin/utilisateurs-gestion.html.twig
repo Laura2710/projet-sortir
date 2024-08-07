@@ -1,0 +1,53 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+    <h1>Gestion des utilisateurs</h1>
+    <div class="centrer">
+        <a href="{{ path('admin_utilisateurs_upload') }}" class="btn btn-secondaire">Importer des utilisateurs</a>
+        <a href="{{ path('admin_utilisateur_creer') }}" class="btn btn-secondaire">Créer un utilisateur</a>
+    </div>
+
+    <h2>Liste des utilisateurs</h2>
+    <table>
+        <thead>
+        <tr>
+            <th>Nom complet</th>
+            <th>Pseudo</th>
+            <th>Campus</th>
+            <th>Inscriptions</th>
+            <th>Status</th>
+            <th>Actions</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for p in participants %}
+            <tr>
+                <td>{{ p.nom }} {{ p.prenom }}</td>
+                <td>{{ p.pseudo }}</td>
+                <td>{{ p.campus.nom }}</td>
+                <td>
+                    {% for s in p.inscriptions %}
+                        {% if s.etat.libelle.value == 'Ouverte' %}
+                            En cours : {{ s.campus.nom }}, {{ s.nom }} le {{ s.dateHeureDebut|date('d/m/Y') }} organisée par {{ s.organisateur.nom }} {{ s.organisateur.prenom }}
+                        {% endif %}
+                    {% endfor %}
+                </td>
+                <td>{% if p.isActif %}Actif{% else %}Inactif{% endif %}</td>
+                <td>
+                    <div class="flex-actions">
+                          <a href="{{ path('admin_utilisateur_activer', {'id':p.id}) }}">
+                                {% if p.isActif %}Désactiver{% else %}Activer{% endif %}
+                          </a>
+                        <a href="{{ path('admin_utilisateur_supprimer', {'id':p.id}) }}">Supprimer</a>
+                    </div>
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}
+
+{% block title %}
+    Gestion des utilisateurs
+{% endblock %}
+

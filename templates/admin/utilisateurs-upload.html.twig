@@ -1,0 +1,17 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+    <h1>Créer des utilisateurs via imports CSV</h1>
+    <div class="centrer">
+        {{ form_start(formUpload) }}
+        {{ form_widget(formUpload) }}
+        <button type="submit" class="btn btn-primaire">Enregistrer</button>
+        {{ form_end(formUpload) }}
+    </div>
+
+{% endblock %}
+
+{% block title %}
+    Créer des utilisateurs
+{% endblock %}
+

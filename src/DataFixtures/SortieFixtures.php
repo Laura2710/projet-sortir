@@ -17,10 +17,9 @@ class SortieFixtures extends Fixture implements OrderedFixtureInterface
     {
         $lieux = $manager->getRepository(Lieu::class)->findAll();
         $participants = $manager->getRepository(Participant::class)->findAll();
-
         $faker = Factory::create('fr_FR');
 
-        for ($i = 1; $i <= 5; $i++) {
+        for ($i = 1; $i <= 50; $i++) {
             $organisateur = $faker->randomElement($participants);
             $campus = $organisateur->getCampus();
             $dateDebut = $faker->dateTimeBetween('-1 month', '+2 month');

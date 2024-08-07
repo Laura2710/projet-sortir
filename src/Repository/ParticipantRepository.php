@@ -72,4 +72,19 @@ class ParticipantRepository extends ServiceEntityRepository implements PasswordU
             ->setParameter('query', $identifier)
             ->getOneOrNullResult();
     }
+
+    public function findParticipants($admin)
+    {
+        return $this->createQueryBuilder('p')
+            ->join('p.campus', 'c')
+            ->addSelect('c')
+            ->leftJoin('p.sorties', 's')
+            ->addSelect('s')
+            ->orderBy('p.nom', 'ASC')
+            ->orderBy('p.prenom', 'ASC')
+            ->where('p <> :user')
+            ->setParameter('user', $admin)
+            ->getQuery()
+            ->getResult();
+    }
 }
