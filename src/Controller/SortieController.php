@@ -2,9 +2,15 @@
 
 namespace App\Controller;
 
+use App\Entity\Sortie;
+use App\Enum\EtatEnum;
 use App\FiltreSortie\FiltreSortie;
+use App\Form\CreerSortieType;
 use App\Form\SortieFiltreType;
+use App\Repository\EtatRepository;
+use App\Repository\LieuRepository;
 use App\Repository\SortieRepository;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
