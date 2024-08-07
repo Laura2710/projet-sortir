@@ -3,6 +3,7 @@
 namespace App\Form;
 
 use App\Entity\Campus;
+use App\FiltreSortie\FiltreSortie;
 use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
@@ -15,9 +16,6 @@ class SortieFiltreType extends AbstractType
 {
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
-        // TODO Récupérer l'utilisateur connecté
-        // $utilisateur = $options['utilisateur'];
-
         $builder
             ->add('campus', EntityType::class, [
                 'class' => Campus::class,
@@ -25,7 +23,6 @@ class SortieFiltreType extends AbstractType
                 'choice_value' => 'id',
                 'required' => true,
                 'label' => 'Campus',
-                // TODO 'data' => $utilisateur->getCampus()
             ])
             ->add('nomSortie', TextType::class, [
                 'label' => 'Le nom de la sortie contient',
@@ -44,17 +41,14 @@ class SortieFiltreType extends AbstractType
             ->add('estOrganisateur', CheckboxType::class, [
                 'label' => "Sorties dont je suis l'organisateur(trice)",
                 'required' => false,
-                'attr' => [ 'checked' => 'checked' ],
-            ])
+                ])
             ->add('estInscrit', CheckboxType::class, [
                 'label' => "Sorties auxquelles je suis inscrit(e)",
                 'required' => false,
-                'attr' => [ 'checked' => 'checked' ],
             ])
             ->add('nonInscrit', CheckboxType::class, [
                 'label' => "Sorties auxquelles je ne suis pas inscrit(e)",
                 'required' => false,
-                'attr' => [ 'checked' => 'checked' ],
             ])
             ->add('sortiesPassees', CheckboxType::class, [
                 'label' => "Sorties passées",
@@ -66,7 +60,7 @@ class SortieFiltreType extends AbstractType
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults([
-            'user' => null
+            'data_class' => FiltreSortie::class,
         ]);
     }
 }

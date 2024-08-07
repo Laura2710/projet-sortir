@@ -10,10 +10,10 @@
 
         {% if app.user %}
             <div class="mb-3">
-                You are logged in as {{ app.user.userIdentifier }}, <a href="{{ path('app_logout') }}">Logout</a>
+                Vous etes connecté en tant que {{ app.user.userIdentifier }}, cliquez ici pour vous  <a href="{{ path('app_logout') }}">Déconnecter</a>.
             </div>
-        {% endif %}
 
+        {% else %}
         <h1 class="h3 mb-3 font-weight-normal">Veuillez vous connecter</h1>
         <label for="username">Mail ou Pseudo</label>
         <input type="text" value="{{ last_username }}" name="_username" id="username" class="form-control" autocomplete="username" required autofocus>
@@ -23,19 +23,15 @@
         <input type="hidden" name="_csrf_token"
                value="{{ csrf_token('authenticate') }}"
         >
-
-        {#
-            Uncomment this section and add a remember_me option below your firewall to activate remember me functionality.
-            See https://symfony.com/doc/current/security/remember_me.html
-
             <div class="checkbox mb-3">
                 <input type="checkbox" name="_remember_me" id="_remember_me">
-                <label for="_remember_me">Remember me</label>
+                <label for="_remember_me">Se souvenir de moi</label>
             </div>
-        #}
+
 
         <button class="btn btn-lg btn-primary" type="submit">
-            Sign in
+            Se connecter
         </button>
+        {% endif %}
     </form>
 {% endblock %}
