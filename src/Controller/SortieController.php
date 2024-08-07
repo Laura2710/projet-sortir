@@ -2,7 +2,6 @@
 
 namespace App\Controller;
 
-use App\Entity\Etat;
 use App\Entity\Sortie;
 use App\Enum\EtatEnum;
 use App\FiltreSortie\FiltreSortie;
@@ -59,11 +58,13 @@ class SortieController extends AbstractController
     {
         $sortie = $sortieRepository->find($id);
 
+        // Si l'utilisateur n'est pas l'organisateur ou l'administrateur alors rediriger avec un message d'erreur
         if ($sortie == null || $sortie->getOrganisateur() != $this->getUser() || !$this - $this->isGranted('ROLE_ADMIN')) {
             $this->addFlash('error', "Accès interdit.");
             return $this->redirectToRoute('sortie_liste');
         }
 
+        // Vérifier que la sortie à l'état 'Ouverte' et que la date actuelle est inférieure ou égale à la date du début de la sortie
         if ($sortie->getEtat()->getLibelle()->value == 'Ouverte' && new \DateTime() <= $sortie->getDateHeureDebut()) {
             $formAnnulation = $this->createForm(AnnulationSortieType::class);
             $formAnnulation->handleRequest($request);
@@ -92,11 +93,14 @@ class SortieController extends AbstractController
     public function supprimer(int $id, SortieRepository $sortieRepository, EntityManagerInterface $entityManager): Response
     {
         $sortie = $sortieRepository->find($id);
+
+        // Si la sortie n'existe pas : rediriger avec un message d'erreur
         if (!$sortie) {
             $this->addFlash('error', 'La sortie n\'existe pas.');
             return $this->redirectToRoute('sortie_liste');
         }
 
+        // Vérifier que la sortie à l'état 'Créée' et que l'utilisateur est bien l'organisateur
         if ($sortie->getEtat()->getLibelle()->value == 'Créée' && $sortie->getOrganisateur() == $this->getUser()) {
             $entityManager->remove($sortie);
             $entityManager->flush();
@@ -125,7 +129,7 @@ class SortieController extends AbstractController
 
         $etatLibelle = $sortie->getEtat()->getLibelle()->value;
 
-        // Si la sortie n'est pas en création ou si l'utilisateur n'est l'organisateur
+        // Si la sortie n'est pas en création ou si l'utilisateur n'est l'organisateur : rediriger avec message d'erreur
         if ($etatLibelle !== 'Créée' || $sortie->getOrganisateur() !== $this->getUser()) {
             $this->addFlash('error', 'Accès interdit. Vous n\'êtes pas autorisé à publier cette sortie.');
             return $this->redirectToRoute('sortie_liste');
