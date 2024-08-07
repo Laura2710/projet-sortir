@@ -29,7 +29,7 @@ class SortieController extends AbstractController
             'formulaire_filtres' => $formulaire_filtre->createView()
         ]);
     }
-    #[Route('/{id}', name: 'inscrire', methods: ['GET'])]
+    #[Route('/sortie/inscrire/{id}', name: 'inscrire', methods: ['GET'])]
     public function inscrire(Sortie $sortie, Request $request, SortieRepository $sortieRepository): Response
     {
         if (!$sortie->getParticipants()->contains($this->getUser())){
@@ -38,8 +38,8 @@ class SortieController extends AbstractController
 
        return $this->redirectToRoute('sortie_liste');
     }
-    #[Route('/{id}', name: 'sedesister', methods: ['GET'])]
-    public function sedesister(Sortie $sortie, Request $request, SortieRepository $sortieRepository): Response
+    #[Route('/sortie/se-desister/{id}', name: 'se_desister', methods: ['GET'])]
+    public function seDesister(Sortie $sortie, Request $request, SortieRepository $sortieRepository): Response
     {
         if ($sortie->getParticipants()->contains($this->getUser())){
             $sortie->removeParticipant($this->getUser());
