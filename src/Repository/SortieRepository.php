@@ -2,7 +2,9 @@
 
 namespace App\Repository;
 
+use App\Entity\Etat;
 use App\Entity\Sortie;
+use App\Enum\EtatEnum;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\ORM\QueryBuilder;
 use Doctrine\Persistence\ManagerRegistry;
@@ -115,5 +117,21 @@ class SortieRepository extends ServiceEntityRepository
             ->setParameter('sortie', $sortie)
             ->getQuery()
             ->getOneOrNullResult();
+    }
+
+    public function findByEtats()
+    {
+        return $this->createQueryBuilder('s')
+            ->join('s.etat', 'e')
+            ->where('e.libelle IN (:etats)')
+            ->setParameter('etats',
+                [
+                    EtatEnum::Ouverte,
+                    EtatEnum::EnCours,
+                    EtatEnum::Cloturee
+                ]
+            )
+            ->getQuery()
+            ->getResult();
     }
 }

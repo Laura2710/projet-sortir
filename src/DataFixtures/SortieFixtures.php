@@ -20,10 +20,10 @@ class SortieFixtures extends Fixture implements OrderedFixtureInterface
 
         $faker = Factory::create('fr_FR');
 
-        for ($i = 1; $i <= 30; $i++) {
+        for ($i = 1; $i <= 5; $i++) {
             $organisateur = $faker->randomElement($participants);
             $campus = $organisateur->getCampus();
-            $dateDebut = $faker->dateTimeBetween('-2 month', '+2 month');
+            $dateDebut = $faker->dateTimeBetween('-1 month', '+2 month');
             $heureDebut = $faker->numberBetween(14,22);
             $dateDebut->setTime($heureDebut, 0);
 
