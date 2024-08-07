@@ -56,7 +56,7 @@ class SortieController extends AbstractController
 
     }
 
-    #[Route('/sortie/{id}', name: 'sortie_detail', methods: ['GET'])]
+    #[Route('/sortie/{id}', name: 'sortie_detail', requirements: ['id' => '\d+'], methods: ['GET'])]
     public function show(Sortie $sortieParam, SortieRepository $sortieRepository): Response
     {
         $sortie = $sortieRepository->findSortie($sortieParam);
@@ -175,6 +175,7 @@ class SortieController extends AbstractController
     #[Route('/sortie/creer', name: 'sortie_creer', methods: ['GET', 'POST'])]
     public function creer(Request $request, LieuRepository $lieuRepository, EntityManagerInterface $entityManager, EtatRepository $etatRepository): Response
     {
+
         $sortie = new Sortie();
         $lieux = $lieuRepository->findAll();
         $user = $this->getUser();
