@@ -10,26 +10,26 @@
         <td>{{ sortie.organisateur.prenom }}.{{ sortie.organisateur.nom|first }}</td>
         <td>
             <div class="flex">
-                {% if sortie.etat.libelle != 'Créée' and sortie.etat.libelle != 'Activité passée' %}
+                {% if sortie.etat.libelle.value != 'Créée' and sortie.etat.libelle != 'Activité passée' %}
                     <a href="">Afficher</a>
                 {% endif %}
 
-                {% if sortie.etat.libelle == 'Créée' and sortie.organisateur == app.user %}
+                {% if sortie.etat.libelle.value == 'Créée' and sortie.organisateur == app.user %}
                     <a href="">Modifier</a>
                     <a href="">Publier</a>
                     <a href="">Supprimer</a>
                 {% endif %}
 
-                {% if sortie.etat.libelle == 'Cloturee' and sortie.dateHeureDebut < 'now' and sortie.participants.contains(app.user) %}
+                {% if sortie.etat.libelle.value == 'Cloturee' and sortie.dateHeureDebut < 'now' and sortie.participants.contains(app.user) %}
                     <a href="">Se desister</a>
                 {% endif %}
 
-                {% if sortie.etat.libelle == 'Ouverte' %}
+                {% if sortie.etat.libelle.value == 'Ouverte' %}
                     {% if sortie.organisateur != app.user %}
                         {% if sortie.participants.contains(app.user) %}
                             <a href="">Se desister</a>
                         {% else %}
-                            <a href="">S'inscrire</a>
+                            <a href="{{ path('inscrire', {'id': sortie.id}) }}">S'inscrire</a>
                         {% endif %}
                     {% elseif sortie.organisateur == app.user or is_granted('ROLE_ADMIN') %}
                         <a href="">Annuler</a>

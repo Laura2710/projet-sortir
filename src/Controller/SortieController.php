@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use App\Entity\Sortie;
 use App\FiltreSortie\FiltreSortie;
 use App\Form\SortieFiltreType;
 use App\Repository\SortieRepository;
@@ -28,4 +29,25 @@ class SortieController extends AbstractController
             'formulaire_filtres' => $formulaire_filtre->createView()
         ]);
     }
+    #[Route('/{id}', name: 'inscrire', methods: ['GET'])]
+    public function inscrire(Sortie $sortie, Request $request, SortieRepository $sortieRepository): Response
+    {
+        if (!$sortie->getParticipants()->contains($this->getUser())){
+            $sortie->addParticipant($this->getUser());
+        }
+
+       return $this->redirectToRoute('sortie_liste');
+    }
+    #[Route('/{id}', name: 'sedesister', methods: ['GET'])]
+    public function sedesister(Sortie $sortie, Request $request, SortieRepository $sortieRepository): Response
+    {
+        if ($sortie->getParticipants()->contains($this->getUser())){
+            $sortie->removeParticipant($this->getUser());
+        }
+
+        return $this->redirectToRoute('sortie_liste');
+
+    }
 }
+
+
