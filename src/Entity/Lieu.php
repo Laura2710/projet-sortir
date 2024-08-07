@@ -19,13 +19,13 @@ class Lieu
     #[ORM\Column(length: 50)]
     #[Assert\NotBlank(message: 'Le nom doit être renseigné')]
     #[Assert\Length(min: 3, max: 50, minMessage: 'Le nom doit comporter au moins {{ limit }} caractères', maxMessage: 'Le nom ne doit pas dépasser {{ limit }} caractères')]
-    #[Assert\Regex(pattern: '^[A-zÀ-ÿ-\' ]{3,}$', message: 'Le nom comporte des caractères interdits')]
+    #[Assert\Regex(pattern: '/^[A-zÀ-ÿ-\' ]{3,}$/', message: 'Le nom comporte des caractères interdits')]
     private ?string $nom = null;
 
     #[ORM\Column(length: 100)]
     #[Assert\NotBlank(message: 'La rue doit être renseignée')]
     #[Assert\Length(min: 3, max: 100, minMessage: 'La rue doit comporter au moins {{ limit }} caractères', maxMessage: 'La rue ne doit pas dépasser {{ limit }} caractères')]
-    #[Assert\Regex(pattern: '^[0-9A-zÀ-ÿ-\', ]{3,}$', message: 'La rue comporte des caractères interdits')]
+    #[Assert\Regex(pattern: '/^[0-9A-zÀ-ÿ-\', ]{3,}$/', message: 'La rue comporte des caractères interdits')]
     private ?string $rue = null;
 
     #[ORM\Column(nullable: true)]

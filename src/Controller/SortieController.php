@@ -28,4 +28,29 @@ class SortieController extends AbstractController
             'formulaire_filtres' => $formulaire_filtre->createView()
         ]);
     }
+
+    #[Route('/sortie/creer', name: 'sortie_creer', methods: ['GET', 'POST'])]
+    public function creer(Request $request, LieuRepository $lieuRepository, EntityManagerInterface $entityManager, EtatRepository $etatRepository): Response
+    {
+        $sortie = new Sortie();
+        $lieux = $lieuRepository->findAll();
+        $user = $this->getUser();
+        $sortie->setCampus($this->getUser()->getCampus());
+        $creerSortieForm = $this->createForm(CreerSortieType::class, $sortie, ['lieux'=>$lieux]);
+
+        $creerSortieForm->handleRequest($request);
+        if ($creerSortieForm->isSubmitted()) {
+            $sortie->setOrganisateur($user);
+            $etat = $etatRepository->findOneBy(['libelle'=>EtatEnum::Creee]);
+            $sortie->setEtat($etat);
+
+            $entityManager->persist($sortie);
+            $entityManager->flush();
+            return $this->redirectToRoute('sortie_liste');
+        }
+
+        return $this->render('sortie/creer.html.twig', [
+            'creerSortieForm' => $creerSortieForm->createView(),
+        ]);
+    }
 }

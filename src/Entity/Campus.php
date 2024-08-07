@@ -21,7 +21,7 @@ class Campus
     #[ORM\Column(length: 50, unique: true)]
     #[Assert\NotBlank(message: 'Le nom doit être renseigné')]
     #[Assert\Length(min: 3, max: 50, minMessage: 'Le nom doit comporter au moins {{ limit }} caractères', maxMessage: 'Le nom ne doit pas dépasser {{ limit }} caractères')]
-    #[Assert\Regex(pattern: '^[A-zÀ-ú-\']+$', message: 'Le nom comporte des caractères interdits')]
+    #[Assert\Regex(pattern: '/^[A-zÀ-ú-\']+$/', message: 'Le nom comporte des caractères interdits')]
     private ?string $nom = null;
 
     /**
