@@ -22,13 +22,13 @@
                 {% endif %}
 
                 {% if sortie.etat.libelle.value == 'Cloturee' and sortie.dateHeureDebut < 'now' and sortie.participants.contains(app.user) %}
-                    <a href="">Se desister</a>
+                    <a href="{{ path('se_desister', {'id': sortie.id}) }}">Se desister</a>
                 {% endif %}
 
                 {% if sortie.etat.libelle.value == 'Ouverte' %}
                     {% if sortie.organisateur != app.user %}
                         {% if sortie.participants.contains(app.user) %}
-                            <a href="">Se desister</a>
+                            <a href="{{ path('se_desister', {'id': sortie.id}) }}">Se desister</a>
                         {% else %}
                             {% if sortie.dateLimiteInscription >= "now" %}
                                 <a href="{{ path('inscrire', {'id': sortie.id}) }}">S'inscrire</a>

@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use App\Entity\Lieu;
 use App\Entity\Sortie;
 use App\Enum\EtatEnum;
 use App\FiltreSortie\FiltreSortie;
@@ -13,6 +14,7 @@ use App\Repository\LieuRepository;
 use App\Repository\SortieRepository;
 use App\Service\MajEtatSortie;
 use Doctrine\ORM\EntityManagerInterface;
+use PHPUnit\Util\Json;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -46,19 +48,56 @@ class SortieController extends AbstractController
         ]);
     }
     #[Route('/sortie/inscrire/{id}', name: 'inscrire', methods: ['GET'])]
-    public function inscrire(Sortie $sortie, Request $request, SortieRepository $sortieRepository): Response
+    public function inscrire(Sortie $sortie, EntityManagerInterface $entityManager, EtatRepository $etatRepository): Response
     {
-        if (!$sortie->getParticipants()->contains($this->getUser())){
-            $sortie->addParticipant($this->getUser());
+        if ($sortie->getOrganisateur() === $this->getUser()) {
+            $this->addFlash('error', 'Vous ne pouvez pas vous inscrire à votre propre sortie.');
+            return $this->redirectToRoute('sortie_liste');
         }
 
-       return $this->redirectToRoute('sortie_liste');
+        if ($sortie->getEtat()->getLibelle()->value !== 'Ouverte') {
+            $this->addFlash('error', 'Vous ne pouvez vous inscrire qu\'à des sorties ouvertes.');
+            return $this->redirectToRoute('sortie_liste');
+        }
+
+        if (!$sortie->getParticipants()->contains($this->getUser()) && $sortie->getParticipants()->count() < $sortie->getNbInscriptionsMax()) {
+            $sortie->addParticipant($this->getUser());
+            $entityManager->persist($sortie);
+            $entityManager->flush();
+            $this->addFlash('success', 'Vous vous êtes inscrit à la sortie.');
+
+            if ($sortie->getParticipants()->count() >= $sortie->getNbInscriptionsMax()) {
+                $etatCloturee = $etatRepository->findOneBy(['libelle' => 'Clôturée']);
+                $sortie->setEtat($etatCloturee);
+                $entityManager->persist($sortie);
+                $entityManager->flush();
+            }
+        } else {
+            $this->addFlash('error', 'Le nombre maximum de participants est atteint.');
+        }
+
+        return $this->redirectToRoute('sortie_liste');
     }
-    #[Route('/sortie/se-desister/{id}', name: 'se_desister', methods: ['GET'])]
-    public function seDesister(Sortie $sortie, Request $request, SortieRepository $sortieRepository): Response
+
+
+
+    #[Route('/sortie/se-desister/{id}', name: 'se_desister',requirements: ['id'=>'\d+'], methods: ['GET'])]
+    public function seDesister(Sortie $sortie, EntityManagerInterface $entityManager, EtatRepository $etatRepository): Response
     {
-        if ($sortie->getParticipants()->contains($this->getUser())){
+        if ($sortie->getParticipants()->contains($this->getUser())) {
             $sortie->removeParticipant($this->getUser());
+            $entityManager->persist($sortie);
+            $entityManager->flush();
+            $this->addFlash('success', 'Vous vous êtes désisté de la sortie.');
+
+            if ($sortie->getParticipants()->count() < $sortie->getNbInscriptionsMax()) {
+                $etatOuverte = $etatRepository->findOneBy(['libelle' => 'Ouverte']);
+                $sortie->setEtat($etatOuverte);
+                $entityManager->persist($sortie);
+                $entityManager->flush();
+            }
+        } else {
+            $this->addFlash('error', 'Vous n\'êtes pas inscrit à cette sortie.');
         }
 
         return $this->redirectToRoute('sortie_liste');
@@ -185,15 +224,15 @@ class SortieController extends AbstractController
     #[Route('/sortie/creer', name: 'sortie_creer', methods: ['GET', 'POST'])]
     public function creer(Request $request, LieuRepository $lieuRepository, EntityManagerInterface $entityManager, EtatRepository $etatRepository): Response
     {
-
         $sortie = new Sortie();
-        $lieux = $lieuRepository->findAll();
+        $lieus = $lieuRepository->findAll();
         $user = $this->getUser();
         $sortie->setCampus($this->getUser()->getCampus());
-        $creerSortieForm = $this->createForm(CreerSortieType::class, $sortie, ['lieux'=>$lieux]);
 
+        $creerSortieForm = $this->createForm(CreerSortieType::class, $sortie, ['lieus'=>$lieus]);
         $creerSortieForm->handleRequest($request);
-        if ($creerSortieForm->isSubmitted()) {
+
+        if ($creerSortieForm->isSubmitted() && $creerSortieForm->isValid()) {
             $sortie->setOrganisateur($user);
             $etat = $etatRepository->findOneBy(['libelle'=>EtatEnum::Creee]);
             $sortie->setEtat($etat);
@@ -208,3 +247,4 @@ class SortieController extends AbstractController
         ]);
     }
 }
+
