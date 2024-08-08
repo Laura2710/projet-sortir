@@ -175,7 +175,6 @@ class AdminController extends AbstractController
                 'mimeTypes' => [
                     'text/csv',
                     'text/plain',
-                    'text/html',
                 ],
             ]));
 
