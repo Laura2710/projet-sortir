@@ -67,7 +67,7 @@ class CreerSortieType extends AbstractType
             ->add('lieu', EntityType::class, [
                 'class' => Lieu::class,
                 'choice_label' => 'nom',
-                'placeholder' => 'Lieu',
+                'placeholder' => 'Choisissez un lieu',
                 'attr' => ['class' => 'lieu-select'],
             ])
             ->add('rue', TextType::class, [
