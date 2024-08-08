@@ -11,7 +11,7 @@
         {% set className = 'ouverte' %}
     {% elseif sortie.etat.libelle.value == 'Cloturee' %}
         {% set className = 'cloturee' %}
-    {% elseif sortie.etat.libelle.value == 'Annulée' or ortie.etat.libelle.value == 'Activité passée' %}
+    {% elseif sortie.etat.libelle.value == 'Annulée' or sortie.etat.libelle.value == 'Activité passée' %}
         {% set className = 'annulee' %}
     {% else %}
         {% set className = '' %}

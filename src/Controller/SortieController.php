@@ -5,10 +5,13 @@ namespace App\Controller;
 use App\Entity\Sortie;
 use App\Enum\EtatEnum;
 use App\FiltreSortie\FiltreSortie;
+use App\Form\CreerSortieType;
 use App\Form\AnnulationSortieType;
 use App\Form\SortieFiltreType;
 use App\Repository\EtatRepository;
+use App\Repository\LieuRepository;
 use App\Repository\SortieRepository;
+use App\Service\MajEtatSortie;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -18,8 +21,11 @@ use Symfony\Component\Routing\Attribute\Route;
 class SortieController extends AbstractController
 {
     #[Route('/', name: 'sortie_liste', methods: ['GET', 'POST'])]
-    public function liste(Request $request, SortieRepository $sortieRepository): Response
+    public function liste(Request $request, SortieRepository $sortieRepository, MajEtatSortie $majEtatSortie): Response
     {
+        // Mise à jour de l'état des sortie
+        $majEtatSortie->mettreAjourEtatSortie();
+
         $filtre = new FiltreSortie();
         $filtre->setCampus($this->getUser()->getCampus());
         $formulaire_filtre = $this->createForm(SortieFiltreType::class, $filtre);
@@ -88,10 +94,10 @@ class SortieController extends AbstractController
         }
 
         return $this->redirectToRoute('sortie_liste');
+
     }
 
-
-    #[Route('/sortie/{id}', name: 'sortie_detail', requirements: ['id'=>'\d+'], methods: ['GET'])]
+    #[Route('/sortie/{id}', name: 'sortie_detail', requirements: ['id' => '\d+'], methods: ['GET'])]
     public function show(Sortie $sortieParam, SortieRepository $sortieRepository): Response
     {
         $sortie = $sortieRepository->findSortie($sortieParam);
@@ -116,10 +122,11 @@ class SortieController extends AbstractController
         $sortie = $sortieRepository->find($id);
 
         // Si l'utilisateur n'est pas l'organisateur ou l'administrateur alors rediriger avec un message d'erreur
-        if ($sortie == null || $sortie->getOrganisateur() != $this->getUser() || !$this - $this->isGranted('ROLE_ADMIN')) {
-            $this->addFlash('error', "Accès interdit. Vous n\'êtes pas autorisé à annuler cette sortie.");
+        if ($sortie == null || ($sortie->getOrganisateur() != $this->getUser() && !$this->isGranted('ROLE_ADMIN'))) {
+            $this->addFlash('error', "Accès interdit. Vous n'êtes pas autorisé à annuler cette sortie.");
             return $this->redirectToRoute('sortie_liste');
         }
+
 
         // Vérifier que la sortie à l'état 'Ouverte' et que la date actuelle est inférieure ou égale à la date du début de la sortie
         if ($sortie->getEtat()->getLibelle()->value == 'Ouverte' && new \DateTime() <= $sortie->getDateHeureDebut()) {
@@ -207,4 +214,30 @@ class SortieController extends AbstractController
         return $this->redirectToRoute('sortie_liste');
     }
 
+    #[Route('/sortie/creer', name: 'sortie_creer', methods: ['GET', 'POST'])]
+    public function creer(Request $request, LieuRepository $lieuRepository, EntityManagerInterface $entityManager, EtatRepository $etatRepository): Response
+    {
+
+        $sortie = new Sortie();
+        $lieux = $lieuRepository->findAll();
+        $user = $this->getUser();
+        $sortie->setCampus($this->getUser()->getCampus());
+        $creerSortieForm = $this->createForm(CreerSortieType::class, $sortie, ['lieux'=>$lieux]);
+
+        $creerSortieForm->handleRequest($request);
+        if ($creerSortieForm->isSubmitted()) {
+            $sortie->setOrganisateur($user);
+            $etat = $etatRepository->findOneBy(['libelle'=>EtatEnum::Creee]);
+            $sortie->setEtat($etat);
+
+            $entityManager->persist($sortie);
+            $entityManager->flush();
+            return $this->redirectToRoute('sortie_liste');
+        }
+
+        return $this->render('sortie/creer.html.twig', [
+            'creerSortieForm' => $creerSortieForm->createView(),
+        ]);
+    }
 }
+

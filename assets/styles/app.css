@@ -211,3 +211,11 @@ h1 {
     max-width: 100%;
     min-width: -webkit-fill-available;
 }
+
+.checkbox input {
+    min-width: auto;
+    min-height: auto;
+}
+.checkbox label {
+    display: inline-block;
+}

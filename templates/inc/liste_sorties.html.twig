@@ -1,37 +1,48 @@
 {% for sortie in sorties %}
+
     <tr>
         <td>{{ sortie.campus.nom }}</td>
         <td>{{ sortie.nom }}</td>
         <td>{{ sortie.dateHeureDebut|date('d/m/Y H:i') }}</td>
         <td>{{ sortie.dateLimiteInscription|date('d/m/Y') }}</td>
-        <td>{{ sortie.participants|length }}/{{ sortie.nbInscriptionsMax }}</td>
+        <td>{{ sortie.participants.count() }}/{{ sortie.nbInscriptionsMax }}</td>
         <td>{{ sortie.etat.libelle.value }}</td>
         <td>{% if sortie.participants.contains(app.user) %} X {% endif %}</td>
         <td>{{ sortie.organisateur.prenom }}.{{ sortie.organisateur.nom|first }}</td>
         <td>
             <div class="flex-actions">
                 {% if sortie.etat.libelle.value != 'Créée' and sortie.etat.libelle.value != 'Activité passée' %}
-                    <a href="{{ path('sortie_detail', {'id': sortie.id}) }}">Afficher</a>
+                    <a href="{{ path('sortie_detail', {'id':sortie.id}) }}">Afficher</a>
                 {% endif %}
 
                 {% if sortie.etat.libelle.value == 'Créée' and sortie.organisateur == app.user %}
                     <a href="">Modifier</a>
-                    <a href="{{ path('sortie_publier', {'id': sortie.id}) }}">Publier</a>
-                    <a href="{{ path('sortie_supprimer', {'id': sortie.id}) }}">Supprimer</a>
+                    <a href="{{ path('sortie_publier', {'id':sortie.id}) }}">Publier</a>
+                    <a href="{{ path('sortie_supprimer', {'id':sortie.id}) }}">Supprimer</a>
                 {% endif %}
 
-                {% if sortie.participants.contains(app.user) %}
-                    <a href="{{ path('se_desister', {'id': sortie.id}) }}">Se désister</a>
-                {% else %}
-                    {% if sortie.etat.libelle.value == 'Ouverte' and sortie.dateLimiteInscription >= 'now' and sortie.participants|length < sortie.nbInscriptionsMax and sortie.organisateur != app.user %}
-                        <a href="{{ path('inscrire', {'id': sortie.id}) }}">S'inscrire</a>
+                {% if sortie.etat.libelle.value == 'Cloturee' and sortie.dateHeureDebut < 'now' and sortie.participants.contains(app.user) %}
+                    <a href="{{ path('se_desister', {'id': sortie.id}) }}">Se desister</a>
+                {% endif %}
+
+                {% if sortie.etat.libelle.value == 'Ouverte' %}
+                    {% if sortie.organisateur != app.user %}
+                        {% if sortie.participants.contains(app.user) %}
+                            <a href="{{ path('se_desister', {'id': sortie.id}) }}">Se desister</a>
+                        {% else %}
+                            {% if sortie.dateLimiteInscription >= "now" %}
+                                <a href="{{ path('inscrire', {'id': sortie.id}) }}">S'inscrire</a>
+                            {% endif %}
+                        {% endif %}
+                   {% endif %}
+                    {% if sortie.organisateur == app.user or is_granted('ROLE_ADMIN') %}
+                        <a href="{{ path('sortie_annuler', {'id':sortie.id }) }}">Annuler</a>
                     {% endif %}
-                {% endif %}
-
-                {% if sortie.etat.libelle.value == 'Ouverte' and sortie.organisateur == app.user %}
-                    <a href="{{ path('sortie_annuler', {'id': sortie.id }) }}">Annuler</a>
                 {% endif %}
             </div>
         </td>
     </tr>
+
 {% endfor %}
+
+<a href="{{ path('sortie_creer') }}">Créer une sortie</a>

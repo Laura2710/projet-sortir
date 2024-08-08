@@ -18,19 +18,22 @@
     {% endblock %}
 </head>
 <body>
-{% if app.user %}
+
 <header>
     <div class="container">
         <a href="{{ path('sortie_liste') }}" class="logo">Sortir.com</a>
+        {% if app.user %}
         <nav>
             {% if is_granted('ROLE_ADMIN') %}
                 <a href="">Villes</a>
                 <a href="">Campus</a>
+                <a href="{{ path('admin_utilisateurs') }}">Utilisateurs</a>
             {% endif %}
             <a href="{{ path('sortie_liste') }}">Accueil</a>
             <a href="">Mon profil</a>
             <a href="{{  path('app_logout') }}">Se déconnecter</a>
         </nav>
+        {% endif %}
     </div>
 </header>
     {% for type, messages in app.flashes %}
@@ -40,7 +43,7 @@
             </div>
         {% endfor %}
     {% endfor %}
-
+{% if app.user %}
     <div class="container">
         <div class="infoUtilisateurConnecte">
             <div>

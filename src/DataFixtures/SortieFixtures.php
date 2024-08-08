@@ -17,53 +17,53 @@ class SortieFixtures extends Fixture implements OrderedFixtureInterface
     {
         $lieux = $manager->getRepository(Lieu::class)->findAll();
         $participants = $manager->getRepository(Participant::class)->findAll();
-
         $faker = Factory::create('fr_FR');
+        $nomsSortie = ['Randonnée', 'Pique-Nique', 'Exposition', 'Cinema', 'Atelier cuisine', 'Apero'];
 
-        for ($i = 1; $i <= 30; $i++) {
-            $organisateur = $faker->randomElement($participants);
-            $campus = $organisateur->getCampus();
-            $dateDebut = $faker->dateTimeBetween('-2 month', '+2 month');
-            $heureDebut = $faker->numberBetween(14,22);
-            $dateDebut->setTime($heureDebut, 0);
+        // Une sortie ouverte
+        $dateDebutSortieOuverte = $faker->dateTimeBetween('+1 day', '+1 month');
+        $heureDebut = $faker->numberBetween(9, 22);
+        $dateDebutSortieOuverte->setTime($heureDebut, 0);
 
-            $dateCloture = clone $dateDebut;
-            $dateCloture->modify('-1 day');
+        // Une sortie en cours
+        $dateDebutSortieEnCours = new \DateTime('now', new \DateTimeZone('Europe/Paris'));
+        $dateDebutSortieEnCours->modify('-50 minutes');
 
-            $sortie = new Sortie();
-            $sortie->setOrganisateur($organisateur);
-            $sortie->setCampus($campus);
-            $sortie->setLieu($faker->randomElement($lieux));
+        // Une sortie Terminée
+        $dateTerminee = new \DateTime();
+        $dateTerminee->modify('-1 day');
 
-            $nomsSortie = ['Randonnée', 'Pique-Nique', 'Exposition', 'Cinema', 'Atelier cuisine', 'Apero'];
-            $sortie->setNom($faker->randomElement($nomsSortie));
-            $sortie->setDateHeureDebut($dateDebut);
-            $sortie->setDateLimiteInscription($dateCloture);
-            $sortie->setNbInscriptionsMax(8);
-            $sortie->setInfosSortie($faker->paragraph());
+        // Une sortie Passée
+        $datePassee = new \DateTime();
+        $datePassee->modify('-1 month');
 
-            $duree = 60;
-            $sortie->setDuree($duree);
+        $datesACreer = [$dateDebutSortieOuverte, $dateDebutSortieEnCours, $dateTerminee, $datePassee];
 
-            $dateFin = clone $dateDebut;
-            $dateFin->modify('+' . $duree . ' minutes');
-            $now = new \DateTime();
+     for ($j = 0; $j < 3; $j++) {
+         for ($i = 0; $i < count($datesACreer); $i++) {
+             $sortie = new Sortie();
+             $duree = 60;
+             $organisateur = $faker->randomElement($participants);
+             $campus = $organisateur->getCampus();
+             $sortie->setOrganisateur($organisateur);
+             $sortie->setCampus($campus);
+             $sortie->setLieu($faker->randomElement($lieux));
+             $sortie->setNom($faker->randomElement($nomsSortie));
+             $sortie->setDuree($duree);
 
-            $dateDifference = $now->diff($dateFin);
+             $randomDate = $datesACreer[$i];
+             $sortie->setDateHeureDebut($randomDate);
+             $dateCloture = clone $randomDate;
+             $dateCloture->modify('-1 day');
+             $sortie->setDateLimiteInscription($dateCloture);
 
-            if ($dateFin < $now && $dateDifference->m >= 1) {
-                $sortie->setEtat($manager->getRepository(Etat::class)->findOneBy(['libelle' => 'Activité passée']));
-            } elseif ($dateDebut <= $now && $dateFin >= $now) {
-                $sortie->setEtat($manager->getRepository(Etat::class)->findOneBy(['libelle' => 'Activité en cours']));
-            } elseif ($dateCloture < $now) {
-                $sortie->setEtat($manager->getRepository(Etat::class)->findOneBy(['libelle' => 'Cloturee']));
-            } else {
-                $choix = ['Ouverte', 'Créée'];
-                $sortie->setEtat($manager->getRepository(Etat::class)->findOneBy(['libelle' => $faker->randomElement($choix)]));
-            }
+             $sortie->setNbInscriptionsMax(8);
+             $sortie->setInfosSortie($faker->paragraph());
 
-            $manager->persist($sortie);
-        }
+             $sortie->setEtat($manager->getRepository(Etat::class)->findOneBy(['libelle' => 'Ouverte']));
+             $manager->persist($sortie);
+         }
+     }
 
         $manager->flush();
     }

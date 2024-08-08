@@ -33,26 +33,26 @@ class Participant implements UserInterface, PasswordAuthenticatedUserInterface
      * @var string The hashed password
      */
     #[ORM\Column]
-    #[Assert\NotBlank(message: "Le mot de passe est requis")]
+    //#[Assert\NotBlank(message: "Le mot de passe est requis")]
     private ?string $motPasse = null;
 
 
     #[ORM\Column(length: 100)]
     #[Assert\NotBlank(message: "Le nom est requis")]
     #[Assert\Length(min:3, max:100, minMessage: 'Le nom doit comporter {{ limit }} caractères minimum', maxMessage: 'Le nom doit comporter {{ limit }} caractères maximum')]
-    #[Assert\Regex(pattern: '^[A-zÀ-ÿ-]{3,}$', message: 'Le nom comporte des caractères interdits')]
+    #[Assert\Regex(pattern: '/^[A-zÀ-ÿ-]{3,}$/', message: 'Le nom comporte des caractères interdits')]
     private ?string $nom = null;
 
     #[ORM\Column(length: 100)]
     #[Assert\NotBlank(message: "Le prénom est requis")]
     #[Assert\Length(min:3, max:100, minMessage: 'Le prénom doit comporter {{ limit }} caractères minimum', maxMessage: 'Le prénom doit comporter {{ limit }} caractères maximum')]
-    #[Assert\Regex(pattern: '^[A-zÀ-ÿ-]+$', message: 'Le prénom comporte des caractères interdits')]
+    #[Assert\Regex(pattern: '/^[A-zÀ-ÿ-]+$/', message: 'Le prénom comporte des caractères interdits')]
     private ?string $prenom = null;
 
     #[ORM\Column(length: 20)]
     #[Assert\NotBlank(message: "Le téléphone est requis")]
     #[Assert\Length(min:10, max:20, minMessage: 'Le téléphone doit comporter {{ limit }} caractères minimum', maxMessage: 'Le téléphone doit comporter {{ limit }} caractères maximum')]
-    #[Assert\Regex(pattern: '^[\d\- ]+$', message: 'Le téléphone comporte des caractères interdits')]
+    #[Assert\Regex(pattern: '/^[\d\- ]+$/', message: 'Le téléphone comporte des caractères interdits')]
     private ?string $telephone = null;
 
     #[ORM\Column(length: 50)]

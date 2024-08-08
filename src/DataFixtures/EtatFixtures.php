@@ -36,6 +36,9 @@ class EtatFixtures extends Fixture implements OrderedFixtureInterface
         $etatPassee->setLibelle(EtatEnum::Passee);
         $manager->persist($etatPassee);
 
+        $etatTerminee = new Etat();
+        $etatTerminee->setLibelle(EtatEnum::Terminee);
+        $manager->persist($etatTerminee);
 
 
         $manager->flush();
