@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use App\Entity\Lieu;
 use App\Entity\Sortie;
 use App\Enum\EtatEnum;
 use App\FiltreSortie\FiltreSortie;
@@ -12,6 +13,7 @@ use App\Repository\EtatRepository;
 use App\Repository\LieuRepository;
 use App\Repository\SortieRepository;
 use Doctrine\ORM\EntityManagerInterface;
+use PHPUnit\Util\Json;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -175,15 +177,15 @@ class SortieController extends AbstractController
     #[Route('/sortie/creer', name: 'sortie_creer', methods: ['GET', 'POST'])]
     public function creer(Request $request, LieuRepository $lieuRepository, EntityManagerInterface $entityManager, EtatRepository $etatRepository): Response
     {
-
         $sortie = new Sortie();
-        $lieux = $lieuRepository->findAll();
+        $lieus = $lieuRepository->findAll();
         $user = $this->getUser();
         $sortie->setCampus($this->getUser()->getCampus());
-        $creerSortieForm = $this->createForm(CreerSortieType::class, $sortie, ['lieux'=>$lieux]);
 
+        $creerSortieForm = $this->createForm(CreerSortieType::class, $sortie, ['lieus'=>$lieus]);
         $creerSortieForm->handleRequest($request);
-        if ($creerSortieForm->isSubmitted()) {
+
+        if ($creerSortieForm->isSubmitted() && $creerSortieForm->isValid()) {
             $sortie->setOrganisateur($user);
             $etat = $etatRepository->findOneBy(['libelle'=>EtatEnum::Creee]);
             $sortie->setEtat($etat);
