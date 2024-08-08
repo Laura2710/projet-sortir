@@ -59,6 +59,11 @@ class AdminController extends AbstractController
                                 return $this->redirectToRoute('admin_utilisateurs_upload');
                             }
                             $participant = $this->getParticipant($record, $passwordHasher, $campus);
+                            $violations = $validator->validate($participant);
+                            if (count($violations) > 0) {
+                                $this->addFlash('error', "Le participant ".$participant->getPseudo()." n'est pas valide");
+                                return $this->redirectToRoute('admin_utilisateurs_upload');
+                            }
                             $entityManager->persist($participant);
                         }
                         $entityManager->flush();
@@ -108,7 +113,7 @@ class AdminController extends AbstractController
         return $this->render('admin/utilisateur-creer.html.twig', ['registrationForm' => $form]);
     }
 
-    #[Route('/utilisateur/activer/{id}', name: 'utilisateur_activer', methods: ['GET'])]
+    #[Route('/utilisateur/activer/{id}', name: 'utilisateur_activer', requirements: ['id' => '\d+'], methods: ['GET'])]
     public function desactiverUtilisateur(int $id, EntityManagerInterface $entityManager): Response
     {
         $participant = $entityManager->find(Participant::class, $id);
@@ -121,7 +126,7 @@ class AdminController extends AbstractController
             return $this->redirectToRoute('admin_utilisateurs');
         }
 
-        $participant->isActif() ? $participant->setActif(false) : $participant->setActif(true);
+        $participant->setActif(!$participant->isActif());
         $entityManager->flush();
 
 
@@ -132,7 +137,7 @@ class AdminController extends AbstractController
         return $this->redirectToRoute('admin_utilisateurs');
     }
 
-    #[Route('/utilisateur/supprimer/{id}', name: 'utilisateur_supprimer', methods: ['GET'])]
+    #[Route('/utilisateur/supprimer/{id}', name: 'utilisateur_supprimer', requirements: ['id' => '\d+'], methods: ['GET'])]
     public function supprimerUtilisateur(int $id, EntityManagerInterface $entityManager): Response
     {
         $participant = $entityManager->find(Participant::class, $id);
