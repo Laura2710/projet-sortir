@@ -153,11 +153,11 @@ class AdminController extends AbstractController
     private function getParticipant(mixed $record, UserPasswordHasherInterface $passwordHasher, Campus $campus): Participant
     {
         $participant = new Participant();
-        $participant->setNom($record['nom']);
-        $participant->setPrenom($record['prenom']);
-        $participant->setMail($record['email']);
-        $participant->setPseudo($record['pseudo']);
-        $participant->setTelephone($record['telephone']);
+        $participant->setNom(htmlspecialchars($record['nom']));
+        $participant->setPrenom(htmlspecialchars($record['prenom']));
+        $participant->setMail(htmlspecialchars($record['email']));
+        $participant->setPseudo(htmlspecialchars($record['pseudo']));
+        $participant->setTelephone(htmlspecialchars($record['telephone']));
         $participant->setAdministrateur(false);
         $participant->setActif(true);
         $mdp = $record['password'];
@@ -171,26 +171,37 @@ class AdminController extends AbstractController
     {
         $violations = $validator->validate($fichier,
             new File([
-                'maxSize' => '200k',
+                'maxSize' => '1000K',
                 'mimeTypes' => [
                     'text/csv',
-                    'text/plain'
+                    'text/plain',
+                    'text/html',
                 ],
             ]));
 
         if (count($violations) > 0) {
-            $this->addFlash('error', "Le fichier n'est pas valide.");
+            foreach ($violations as $violation) {
+                $this->addFlash('error', $violation->getMessage());
+            }
             return false;
         }
         return true;
     }
 
-    private function lireDonneesCVS(mixed $fichier): \Iterator
+    private function lireDonneesCVS(mixed $fichier): array
     {
         $csv = Reader::createFromPath($fichier->getRealPath(), 'r');
         $csv->setHeaderOffset(0);
         $csv->setDelimiter(';');
         $records = $csv->getRecords();
-        return $records;
+
+        // Filtrer les lignes vides
+        $recordsFiltres = [];
+        foreach ($records as $record) {
+            if (!empty(array_filter($record))) {
+                $recordsFiltres[] = $record;
+            }
+        }
+        return $recordsFiltres;
     }
 }
