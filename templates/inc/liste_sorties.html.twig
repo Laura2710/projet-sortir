@@ -34,7 +34,8 @@
                                 <a href="{{ path('inscrire', {'id': sortie.id}) }}">S'inscrire</a>
                             {% endif %}
                         {% endif %}
-                    {% elseif sortie.organisateur == app.user %}
+                   {% endif %}
+                    {% if sortie.organisateur == app.user or is_granted('ROLE_ADMIN') %}
                         <a href="{{ path('sortie_annuler', {'id':sortie.id }) }}">Annuler</a>
                     {% endif %}
                 {% endif %}

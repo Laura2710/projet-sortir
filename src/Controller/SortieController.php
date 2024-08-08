@@ -81,10 +81,11 @@ class SortieController extends AbstractController
         $sortie = $sortieRepository->find($id);
 
         // Si l'utilisateur n'est pas l'organisateur ou l'administrateur alors rediriger avec un message d'erreur
-        if ($sortie == null || $sortie->getOrganisateur() != $this->getUser() || !$this->isGranted('ROLE_ADMIN')) {
-            $this->addFlash('error', "Accès interdit. Vous n\'êtes pas autorisé à annuler cette sortie.");
+        if ($sortie == null || ($sortie->getOrganisateur() != $this->getUser() && !$this->isGranted('ROLE_ADMIN'))) {
+            $this->addFlash('error', "Accès interdit. Vous n'êtes pas autorisé à annuler cette sortie.");
             return $this->redirectToRoute('sortie_liste');
         }
+
 
         // Vérifier que la sortie à l'état 'Ouverte' et que la date actuelle est inférieure ou égale à la date du début de la sortie
         if ($sortie->getEtat()->getLibelle()->value == 'Ouverte' && new \DateTime() <= $sortie->getDateHeureDebut()) {
