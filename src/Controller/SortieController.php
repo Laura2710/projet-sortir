@@ -30,10 +30,15 @@ class SortieController extends AbstractController
         $filtre->setCampus($this->getUser()->getCampus());
         $formulaire_filtre = $this->createForm(SortieFiltreType::class, $filtre);
         $formulaire_filtre->handleRequest($request);
+        $sorties = $sortieRepository->findSorties($this->getUser());
 
-        $sorties = $formulaire_filtre->isSubmitted() && $formulaire_filtre->isValid()
-            ? $sortieRepository->findByCriteres($filtre, $this->getUser())
-            : $sortieRepository->findSorties($this->getUser());
+        if ($formulaire_filtre->isSubmitted() && $formulaire_filtre->isValid()) {
+            $campus = $formulaire_filtre->get('campus')->getData();
+            $filtre->setCampus($campus);
+            $sorties = $sortieRepository->findByCriteres($filtre, $this->getUser());
+        }
+
+
 
         return $this->render('sortie/liste.html.twig', [
             'sorties' => $sorties,

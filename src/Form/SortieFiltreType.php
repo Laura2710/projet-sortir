@@ -7,6 +7,7 @@ use App\FiltreSortie\FiltreSortie;
 use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
+use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\DateType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
@@ -21,8 +22,10 @@ class SortieFiltreType extends AbstractType
                 'class' => Campus::class,
                 'choice_label' => 'nom',
                 'choice_value' => 'id',
-                'required' => true,
+                'required' => false,
                 'label' => 'Campus',
+                'placeholder' => 'Tous les campus',
+                'mapped' => false,
             ])
             ->add('nomSortie', TextType::class, [
                 'label' => 'Le nom de la sortie contient',
