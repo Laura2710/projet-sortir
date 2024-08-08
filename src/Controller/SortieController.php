@@ -12,6 +12,7 @@ use App\Form\SortieFiltreType;
 use App\Repository\EtatRepository;
 use App\Repository\LieuRepository;
 use App\Repository\SortieRepository;
+use App\Service\MajEtatSortie;
 use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Util\Json;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -22,8 +23,11 @@ use Symfony\Component\Routing\Attribute\Route;
 class SortieController extends AbstractController
 {
     #[Route('/', name: 'sortie_liste', methods: ['GET', 'POST'])]
-    public function liste(Request $request, SortieRepository $sortieRepository): Response
+    public function liste(Request $request, SortieRepository $sortieRepository, MajEtatSortie $majEtatSortie): Response
     {
+        // Mise à jour de l'état des sortie
+        $majEtatSortie->mettreAjourEtatSortie();
+
         $filtre = new FiltreSortie();
         $filtre->setCampus($this->getUser()->getCampus());
         $formulaire_filtre = $this->createForm(SortieFiltreType::class, $filtre);
@@ -39,19 +43,56 @@ class SortieController extends AbstractController
         ]);
     }
     #[Route('/sortie/inscrire/{id}', name: 'inscrire', methods: ['GET'])]
-    public function inscrire(Sortie $sortie, Request $request, SortieRepository $sortieRepository): Response
+    public function inscrire(Sortie $sortie, EntityManagerInterface $entityManager, EtatRepository $etatRepository): Response
     {
-        if (!$sortie->getParticipants()->contains($this->getUser())){
-            $sortie->addParticipant($this->getUser());
+        if ($sortie->getOrganisateur() === $this->getUser()) {
+            $this->addFlash('error', 'Vous ne pouvez pas vous inscrire à votre propre sortie.');
+            return $this->redirectToRoute('sortie_liste');
         }
 
-       return $this->redirectToRoute('sortie_liste');
+        if ($sortie->getEtat()->getLibelle()->value !== 'Ouverte') {
+            $this->addFlash('error', 'Vous ne pouvez vous inscrire qu\'à des sorties ouvertes.');
+            return $this->redirectToRoute('sortie_liste');
+        }
+
+        if (!$sortie->getParticipants()->contains($this->getUser()) && $sortie->getParticipants()->count() < $sortie->getNbInscriptionsMax()) {
+            $sortie->addParticipant($this->getUser());
+            $entityManager->persist($sortie);
+            $entityManager->flush();
+            $this->addFlash('success', 'Vous vous êtes inscrit à la sortie.');
+
+            if ($sortie->getParticipants()->count() >= $sortie->getNbInscriptionsMax()) {
+                $etatCloturee = $etatRepository->findOneBy(['libelle' => 'Clôturée']);
+                $sortie->setEtat($etatCloturee);
+                $entityManager->persist($sortie);
+                $entityManager->flush();
+            }
+        } else {
+            $this->addFlash('error', 'Le nombre maximum de participants est atteint.');
+        }
+
+        return $this->redirectToRoute('sortie_liste');
     }
-    #[Route('/sortie/se-desister/{id}', name: 'se_desister', methods: ['GET'])]
-    public function seDesister(Sortie $sortie, Request $request, SortieRepository $sortieRepository): Response
+
+
+
+    #[Route('/sortie/se-desister/{id}', name: 'se_desister',requirements: ['id'=>'\d+'], methods: ['GET'])]
+    public function seDesister(Sortie $sortie, EntityManagerInterface $entityManager, EtatRepository $etatRepository): Response
     {
-        if ($sortie->getParticipants()->contains($this->getUser())){
+        if ($sortie->getParticipants()->contains($this->getUser())) {
             $sortie->removeParticipant($this->getUser());
+            $entityManager->persist($sortie);
+            $entityManager->flush();
+            $this->addFlash('success', 'Vous vous êtes désisté de la sortie.');
+
+            if ($sortie->getParticipants()->count() < $sortie->getNbInscriptionsMax()) {
+                $etatOuverte = $etatRepository->findOneBy(['libelle' => 'Ouverte']);
+                $sortie->setEtat($etatOuverte);
+                $entityManager->persist($sortie);
+                $entityManager->flush();
+            }
+        } else {
+            $this->addFlash('error', 'Vous n\'êtes pas inscrit à cette sortie.');
         }
 
         return $this->redirectToRoute('sortie_liste');
@@ -83,10 +124,11 @@ class SortieController extends AbstractController
         $sortie = $sortieRepository->find($id);
 
         // Si l'utilisateur n'est pas l'organisateur ou l'administrateur alors rediriger avec un message d'erreur
-        if ($sortie == null || $sortie->getOrganisateur() != $this->getUser() || !$this - $this->isGranted('ROLE_ADMIN')) {
-            $this->addFlash('error', "Accès interdit. Vous n\'êtes pas autorisé à annuler cette sortie.");
+        if ($sortie == null || ($sortie->getOrganisateur() != $this->getUser() && !$this->isGranted('ROLE_ADMIN'))) {
+            $this->addFlash('error', "Accès interdit. Vous n'êtes pas autorisé à annuler cette sortie.");
             return $this->redirectToRoute('sortie_liste');
         }
+
 
         // Vérifier que la sortie à l'état 'Ouverte' et que la date actuelle est inférieure ou égale à la date du début de la sortie
         if ($sortie->getEtat()->getLibelle()->value == 'Ouverte' && new \DateTime() <= $sortie->getDateHeureDebut()) {
@@ -200,3 +242,4 @@ class SortieController extends AbstractController
         ]);
     }
 }
+

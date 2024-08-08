@@ -34,7 +34,7 @@ class ParticipantFixtures extends Fixture implements OrderedFixtureInterface
         $admin->setActif(true);
         $manager->persist($admin);
 
-        for ($i = 0; $i < 3; $i++) {
+        for ($i = 0; $i < 5; $i++) {
             $utilisateur = new Participant();
             $utilisateur->setNom($faker->lastName());
             $utilisateur->setPrenom($faker->firstName());
