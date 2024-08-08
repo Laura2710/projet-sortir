@@ -11,6 +11,7 @@ use App\Form\SortieFiltreType;
 use App\Repository\EtatRepository;
 use App\Repository\LieuRepository;
 use App\Repository\SortieRepository;
+use App\Service\MajEtatSortie;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -20,8 +21,11 @@ use Symfony\Component\Routing\Attribute\Route;
 class SortieController extends AbstractController
 {
     #[Route('/', name: 'sortie_liste', methods: ['GET', 'POST'])]
-    public function liste(Request $request, SortieRepository $sortieRepository): Response
+    public function liste(Request $request, SortieRepository $sortieRepository, MajEtatSortie $majEtatSortie): Response
     {
+        // Mise à jour de l'état des sortie
+        $majEtatSortie->mettreAjourEtatSortie();
+
         $filtre = new FiltreSortie();
         $filtre->setCampus($this->getUser()->getCampus());
         $formulaire_filtre = $this->createForm(SortieFiltreType::class, $filtre);

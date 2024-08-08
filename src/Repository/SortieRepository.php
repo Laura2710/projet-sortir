@@ -19,7 +19,7 @@ class SortieRepository extends ServiceEntityRepository
         parent::__construct($registry, Sortie::class);
     }
 
-    public function queryBuilderSortie($utilisateur = null) : QueryBuilder
+    public function queryBuilderSortie(): QueryBuilder
     {
         return $this->createQueryBuilder('s')
             ->join('s.campus', 'c')
@@ -31,20 +31,21 @@ class SortieRepository extends ServiceEntityRepository
             ->join('s.lieu', 'l')
             ->addSelect('l')
             ->leftJoin('s.participants', 'p')
-            ->addSelect('p')
-            ->andWhere('(e.libelle <> \'Créée\' OR o = :utilisateur)')
-            ->setParameter('utilisateur', $utilisateur);
-
-
+            ->addSelect('p');
     }
+
     public function findSorties($utilisateur)
     {
+        $now = new \DateTime();
+        $lastMonth = $now->sub(new \DateInterval('P1M'));
 
-        return $this->queryBuilderSortie($utilisateur)
+        return $this->queryBuilderSortie()
+            ->andWhere('(e.libelle <> \'Créée\' OR o = :utilisateur)')
+            ->setParameter('utilisateur', $utilisateur)
             ->andWhere('c = :campus')
             ->setParameter('campus', $utilisateur->getCampus())
-            ->andWhere('DATE_ADD(s.dateHeureDebut, s.duree, \'MINUTE\') > :date')
-            ->setParameter('date', new \DateTime('-1 month'))
+            ->andWhere('s.dateHeureDebut > :date')
+            ->setParameter('date', $lastMonth)
             ->orderBy('s.dateHeureDebut', 'DESC')
             ->getQuery()
             ->getResult();
@@ -52,8 +53,12 @@ class SortieRepository extends ServiceEntityRepository
 
     public function findByCriteres($filtre, $utilisateur)
     {
+        $now = new \DateTime();
+        $lastMonth = $now->sub(new \DateInterval('P1M'));
 
-        $query = $this->queryBuilderSortie($utilisateur);
+        $query = $this->queryBuilderSortie()
+            ->andWhere('(e.libelle <> \'Créée\' OR o = :utilisateur)')
+            ->setParameter('utilisateur', $utilisateur);
 
         // Si la case "inscrit" est cochée
         if ($filtre->getEstInscrit()) {
@@ -64,17 +69,17 @@ class SortieRepository extends ServiceEntityRepository
         // Si la case "non inscrit" est cochée
         if ($filtre->getNonInscrit()) {
             $query->andWhere(':inscrit NOT MEMBER OF s.participants AND s.organisateur != :inscrit')
-                ->setParameter('inscrit', $utilisateur);
+                ->setParameter('inscrit', $utilisateur)
+                ->andWhere('e.libelle = \'Ouverte\'');
         }
 
         // Si la case "sortie passée" est cochée
         if ($filtre->getSortiesPassees()) {
-            $query->andWhere('DATE_ADD(s.dateHeureDebut, s.duree, \'MINUTE\') <= :date')
-                ->setParameter('date', new \DateTime('-1 month'));
-        }
-        else {
-            $query->andWhere('DATE_ADD(s.dateHeureDebut, s.duree, \'MINUTE\') > :date')
-                ->setParameter('date', new \DateTime('-1 month'));
+            $query->andWhere('s.dateHeureDebut < :date')
+                ->setParameter('date', $lastMonth);
+        } else {
+            $query->andWhere('s.dateHeureDebut >= :date')
+                ->setParameter('date', $lastMonth);
         }
 
         // Si la case organisateur est cochée
@@ -85,7 +90,7 @@ class SortieRepository extends ServiceEntityRepository
 
         if ($filtre->getNomSortie()) {
             $query->andWhere('s.nom LIKE :nomSortie')
-                ->setParameter('nomSortie', '%' .$filtre->getNomSortie(). '%');
+                ->setParameter('nomSortie', '%' . $filtre->getNomSortie() . '%');
         }
 
         if ($filtre->getDateDebutSortie()) {
@@ -119,19 +124,62 @@ class SortieRepository extends ServiceEntityRepository
             ->getOneOrNullResult();
     }
 
-    public function findByEtats()
+
+    public function findACloturee()
     {
-        return $this->createQueryBuilder('s')
-            ->join('s.etat', 'e')
-            ->where('e.libelle IN (:etats)')
-            ->setParameter('etats',
-                [
-                    EtatEnum::Ouverte,
-                    EtatEnum::EnCours,
-                    EtatEnum::Cloturee
-                ]
-            )
-            ->getQuery()
-            ->getResult();
+        $timezone = new \DateTimeZone('Europe/Paris');
+        $date = new \DateTime('now', $timezone);
+        $formattedDate = $date->format('Y-m-d H:i:s');
+
+        $query = $this->queryBuilderSortie()
+            ->andWhere(':date >= s.dateLimiteInscription')
+            ->andWhere(':date <= s.dateHeureDebut')
+            ->setParameter('date', $formattedDate)
+            ->getQuery();
+        return $query->getResult();
     }
+
+    public function findEnCours()
+    {
+        $timezone = new \DateTimeZone('Europe/Paris');
+        $date = new \DateTime('now', $timezone);
+        $formattedDate = $date->format('Y-m-d H:i:s');
+
+        $query = $this->queryBuilderSortie()
+            ->andWhere(':date >= s.dateHeureDebut')
+            ->andWhere(':date < DATE_ADD(s.dateHeureDebut, s.duree, \'MINUTE\')')
+            ->setParameter('date', $formattedDate)
+            ->getQuery();
+        return $query->getResult();
+
+    }
+
+    public function findTerminee()
+    {
+        $timezone = new \DateTimeZone('Europe/Paris');
+        $date = new \DateTime('now', $timezone);
+        $formattedDate = $date->format('Y-m-d H:i:s');
+
+        $query = $this->queryBuilderSortie()
+            ->andWhere(':date > DATE_ADD(s.dateHeureDebut, s.duree, \'MINUTE\')')
+            ->andWhere(':date < DATE_ADD(s.dateHeureDebut, 1, \'MONTH\')')
+            ->setParameter('date', $formattedDate)
+            ->getQuery();
+        return $query->getResult();
+    }
+
+    public function findPassees()
+    {
+        $timezone = new \DateTimeZone('Europe/Paris');
+        $date = new \DateTime('now', $timezone);
+        $formattedDate = $date->format('Y-m-d H:i:s');
+
+        $query = $this->queryBuilderSortie()
+            ->where(':date >= DATE_ADD(s.dateHeureDebut, 1, \'MONTH\')')
+            ->setParameter('date', $formattedDate)
+            ->getQuery();
+        return $query->getResult();
+    }
+
+
 }

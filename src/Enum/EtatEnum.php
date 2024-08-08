@@ -8,6 +8,7 @@ enum EtatEnum: string
     case Ouverte = "Ouverte";
     case Cloturee = "Cloturee";
     case EnCours = "Activité en cours";
+    case Terminee = "Terminée";
     case Passee = "Activité passée";
     case Annulee = "Annulée";
 }

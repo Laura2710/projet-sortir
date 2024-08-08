@@ -18,50 +18,51 @@ class MajEtatSortie
         $this->etatRepository = $etatRepository;
     }
     public function mettreAjourEtatSortie() {
-        $timezone = new \DateTimeZone('Europe/Paris');
-        $date = new \DateTime('now', $timezone);
-        $sorties = $this->sortieRepository->findByEtats();
+        $etats = $this->etatRepository->findAll();
 
-        foreach ($sorties as $sortie) {
-            $duree = $sortie->getDuree();
-            $dateFinSortie = clone $sortie->getDateHeureDebut();
-            $dateFinSortie->modify('+' . $duree . ' minutes');
-            $datePassee = clone $dateFinSortie;
-            $datePassee->modify('+1 month');
-
-            $debut = $sortie->getDateHeureDebut()->format('Y-m-d H:i:s');
-            $fin = $dateFinSortie->format('Y-m-d H:i');
-            $maintenant = $date->format('Y-m-d H:i');
-            $passee = $datePassee->format('Y-m-d H:i');
-
-            // Passer d'ouverte à en cours
-            if ($sortie->getEtat()->getLibelle()->value == 'Ouverte') {
-                if ($maintenant > $debut && $maintenant < $fin) {
-                    $etat = $this->etatRepository->findOneBy(['libelle' => EtatEnum::EnCours]);
-                    $sortie->setEtat($etat);
-                    $this->entityManager->persist($sortie);
+        // Fonction de filtrage pour trouver l'état par libellé
+        $findEtatByLibelle = function($libelle) use ($etats) {
+            foreach ($etats as $etat) {
+                if ($etat->getLibelle() === $libelle) {
+                    return $etat;
                 }
             }
+            throw new \UnexpectedValueException("État non trouvé pour le libellé: $libelle");
+        };
 
-            // Passer d'en cours à clôturer
-            if ($sortie->getEtat()->getLibelle()->value == 'Activité en cours') {
-                if ($maintenant >= $fin && $fin < $passee) {
-                    $etat = $this->etatRepository->findOneBy(['libelle' => EtatEnum::Cloturee]);
-                    $sortie->setEtat($etat);
-                    $this->entityManager->persist($sortie);
-                }
-            }
-
-
-            // Passer de clôturer à activité passée
-            if ($sortie->getEtat()->getLibelle()->value == 'Cloturee') {
-                if ($maintenant > $fin && $maintenant > $passee) {
-                    $etat = $this->etatRepository->findOneBy(['libelle' => EtatEnum::Passee]);
-                    $sortie->setEtat($etat);
-                    $this->entityManager->persist($sortie);
-                }
-            }
+        // OUVERTE VERS CLOTURE
+        $cloturees = $this->sortieRepository->findACloturee();
+        $etatCloturee = $findEtatByLibelle(EtatEnum::Cloturee);
+        foreach ($cloturees as $sortie) {
+            $sortie->setEtat($etatCloturee);
+            $this->entityManager->persist($sortie);
         }
+
+        // CLOTURE VERS EN COURS
+        $enCours = $this->sortieRepository->findEnCours();
+        $etatEnCours = $findEtatByLibelle(EtatEnum::EnCours);
+        foreach ($enCours as $sortie) {
+            $sortie->setEtat($etatEnCours);
+            $this->entityManager->persist($sortie);
+        }
+
+        // EN COURS VERS TERMINEE
+        $etatTerminee = $findEtatByLibelle(EtatEnum::Terminee);
+        $terminees = $this->sortieRepository->findTerminee();
+        foreach ($terminees as $sortie) {
+            $sortie->setEtat($etatTerminee);
+            $this->entityManager->persist($sortie);
+        }
+
+        // TERMINEE VERS PASSEE
+        $etatPassee = $findEtatByLibelle(EtatEnum::Passee);
+        $passees = $this->sortieRepository->findPassees();
+        foreach ($passees as $sortie) {
+            $sortie->setEtat($etatPassee);
+            $this->entityManager->persist($sortie);
+        }
+
         $this->entityManager->flush();
     }
+
 }

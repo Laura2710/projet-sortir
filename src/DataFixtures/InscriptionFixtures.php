@@ -17,7 +17,7 @@ class InscriptionFixtures extends Fixture implements OrderedFixtureInterface
 
         // S'assurer qu'il y a au moins une sortie disponible pour inscription
         $eligibleSorties = array_filter($sorties, function($sortie) {
-            return $sortie->getEtat()->getLibelle()->value != 'Créée';
+            return $sortie->getEtat()->getLibelle() != 'Créée'; // Enlever ->value car c'est une chaîne de caractères
         });
 
         // Répartir les participants
@@ -35,9 +35,10 @@ class InscriptionFixtures extends Fixture implements OrderedFixtureInterface
             }
 
             // Si le participant n'est pas inscrit, l'ajouter à la première sortie éligible
-            if (!$inscrit) {
-                $eligibleSorties[0]->addParticipant($participant);
-                $manager->persist($eligibleSorties[0]);
+            if (!$inscrit && !empty($eligibleSorties)) {
+                $firstEligibleSortie = reset($eligibleSorties);
+                $firstEligibleSortie->addParticipant($participant);
+                $manager->persist($firstEligibleSortie);
             }
         }
 
