@@ -35,26 +35,63 @@ class SortieController extends AbstractController
         ]);
     }
     #[Route('/sortie/inscrire/{id}', name: 'inscrire', methods: ['GET'])]
-    public function inscrire(Sortie $sortie, Request $request, SortieRepository $sortieRepository): Response
+    public function inscrire(Sortie $sortie, EntityManagerInterface $entityManager, EtatRepository $etatRepository): Response
     {
-        if (!$sortie->getParticipants()->contains($this->getUser())){
-            $sortie->addParticipant($this->getUser());
+        if ($sortie->getOrganisateur() === $this->getUser()) {
+            $this->addFlash('error', 'Vous ne pouvez pas vous inscrire à votre propre sortie.');
+            return $this->redirectToRoute('sortie_liste');
         }
 
-       return $this->redirectToRoute('sortie_liste');
-    }
-    #[Route('/sortie/se-desister/{id}', name: 'se_desister', methods: ['GET'])]
-    public function seDesister(Sortie $sortie, Request $request, SortieRepository $sortieRepository): Response
-    {
-        if ($sortie->getParticipants()->contains($this->getUser())){
-            $sortie->removeParticipant($this->getUser());
+        if ($sortie->getEtat()->getLibelle()->value !== 'Ouverte') {
+            $this->addFlash('error', 'Vous ne pouvez vous inscrire qu\'à des sorties ouvertes.');
+            return $this->redirectToRoute('sortie_liste');
+        }
+
+        if (!$sortie->getParticipants()->contains($this->getUser()) && $sortie->getParticipants()->count() < $sortie->getNbInscriptionsMax()) {
+            $sortie->addParticipant($this->getUser());
+            $entityManager->persist($sortie);
+            $entityManager->flush();
+            $this->addFlash('success', 'Vous vous êtes inscrit à la sortie.');
+
+            if ($sortie->getParticipants()->count() >= $sortie->getNbInscriptionsMax()) {
+                $etatCloturee = $etatRepository->findOneBy(['libelle' => 'Clôturée']);
+                $sortie->setEtat($etatCloturee);
+                $entityManager->persist($sortie);
+                $entityManager->flush();
+            }
+        } else {
+            $this->addFlash('error', 'Le nombre maximum de participants est atteint.');
         }
 
         return $this->redirectToRoute('sortie_liste');
-
     }
 
-    #[Route('/sortie/{id}', name: 'sortie_detail', methods: ['GET'])]
+
+
+    #[Route('/sortie/se-desister/{id}', name: 'se_desister',requirements: ['id'=>'\d+'], methods: ['GET'])]
+    public function seDesister(Sortie $sortie, EntityManagerInterface $entityManager, EtatRepository $etatRepository): Response
+    {
+        if ($sortie->getParticipants()->contains($this->getUser())) {
+            $sortie->removeParticipant($this->getUser());
+            $entityManager->persist($sortie);
+            $entityManager->flush();
+            $this->addFlash('success', 'Vous vous êtes désisté de la sortie.');
+
+            if ($sortie->getParticipants()->count() < $sortie->getNbInscriptionsMax()) {
+                $etatOuverte = $etatRepository->findOneBy(['libelle' => 'Ouverte']);
+                $sortie->setEtat($etatOuverte);
+                $entityManager->persist($sortie);
+                $entityManager->flush();
+            }
+        } else {
+            $this->addFlash('error', 'Vous n\'êtes pas inscrit à cette sortie.');
+        }
+
+        return $this->redirectToRoute('sortie_liste');
+    }
+
+
+    #[Route('/sortie/{id}', name: 'sortie_detail', requirements: ['id'=>'\d+'], methods: ['GET'])]
     public function show(Sortie $sortieParam, SortieRepository $sortieRepository): Response
     {
         $sortie = $sortieRepository->findSortie($sortieParam);
@@ -169,6 +206,5 @@ class SortieController extends AbstractController
         $this->addFlash('success', 'La sortie a bien été publiée.');
         return $this->redirectToRoute('sortie_liste');
     }
+
 }
-
-
