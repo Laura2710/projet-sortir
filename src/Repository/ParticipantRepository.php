@@ -50,15 +50,15 @@ class ParticipantRepository extends ServiceEntityRepository implements PasswordU
     //        ;
     //    }
 
-    //    public function findOneBySomeField($value): ?Participant
-    //    {
-    //        return $this->createQueryBuilder('p')
-    //            ->andWhere('p.exampleField = :val')
-    //            ->setParameter('val', $value)
-    //            ->getQuery()
-    //            ->getOneOrNullResult()
-    //        ;
-    //    }
+        public function findParticipantById($participantId): ?Participant
+        {
+            return $this->createQueryBuilder('p')
+                ->andWhere('p.id = :id')
+                ->setParameter('id', $participantId)
+                ->getQuery()
+                ->getOneOrNullResult()
+            ;
+        }
     public function loadUserByIdentifier(string $identifier): ?UserInterface
     {
         $entityManager = $this->getEntityManager();
@@ -87,4 +87,10 @@ class ParticipantRepository extends ServiceEntityRepository implements PasswordU
             ->getQuery()
             ->getResult();
     }
+
+    public function getParticipantById($participantId)
+    {
+
+    }
+
 }

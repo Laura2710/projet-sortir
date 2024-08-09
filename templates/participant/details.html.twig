@@ -1,0 +1,24 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Hello ParticipantController!{% endblock %}
+
+{% block body %}
+    {% for label, messages in app.flashes %}
+        {% for message in messages %}
+            <div class="alert-{{  label }}"  >
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endfor %}
+    {% if app.user == participant %}
+<h2>Mon profil</h2>
+    {{ form_start(participantForm) }}
+    {{ form_widget(participantForm) }}
+    <button>Mettre à jour !</button>
+    {{ form_end(participantForm) }}
+        {% else %}
+
+
+
+    {% endif %}
+{% endblock %}
