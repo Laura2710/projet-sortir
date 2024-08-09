@@ -43,6 +43,7 @@ class ParticipantType extends AbstractType
                 "label" => "Email",
             ])
             ->add('motDePasse',RepeatedType::class, [
+                'type' => PasswordType::class,
                 'invalid_message' => "Les mots de passe ne correspondent pas",
                 "required" =>false,
                 'mapped' => false,

@@ -194,6 +194,9 @@ h1 {
     width: fit-content;
 }
 
+.details-participant span {
+    font-weight: bold;
+}
 .detail-sortie .bold {
     font-weight: bold;
 }

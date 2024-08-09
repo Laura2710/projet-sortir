@@ -44,6 +44,7 @@ class ParticipantController extends AbstractController
 //                    'participantForm' => $participantForm->createView()
 //                ]);
             }
+            $entityManager->refresh($this->getUser());
             return $this->render('participant/details.html.twig', [
                 'participant' => $participant,
                 'participantForm' => $participantForm->createView()
@@ -51,7 +52,8 @@ class ParticipantController extends AbstractController
 
         }
         else {
-            return $this->redirectToRoute('sortie_liste');
+            return $this->render('participant/details.html.twig',[
+                'participant' => $participant]);
         }
 
     }
