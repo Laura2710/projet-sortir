@@ -11,13 +11,18 @@ use App\Form\AnnulationSortieType;
 use App\Form\SortieFiltreType;
 use App\Repository\EtatRepository;
 use App\Repository\LieuRepository;
+use App\Repository\ParticipantRepository;
 use App\Repository\SortieRepository;
 use App\Service\MajEtatSortie;
+use App\Service\NotifierParticipant;
 use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Util\Json;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Mailer\MailerInterface;
+use Symfony\Component\Mime\Address;
+use Symfony\Component\Mime\Email;
 use Symfony\Component\Notifier\Notification\Notification;
 use Symfony\Component\Notifier\NotifierInterface;
 use Symfony\Component\Routing\Attribute\Route;
@@ -187,6 +192,7 @@ class SortieController extends AbstractController
         EntityManagerInterface $entityManager,
         SortieRepository       $sortieRepository,
         EtatRepository $etatRepository,
+        NotifierParticipant $notifierParticipant
     ): Response
     {
 
@@ -216,6 +222,10 @@ class SortieController extends AbstractController
         $nouvelEtat->setLibelle(EtatEnum::Ouverte);
         $sortie->setEtat($nouvelEtat);
         $entityManager->flush();
+
+        // notification des participants par email
+        $notifierParticipant->alerterParEmail($sortie);
+
         $this->addFlash('success', 'La sortie a bien été publiée.');
         return $this->redirectToRoute('sortie_liste');
     }

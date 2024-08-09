@@ -93,4 +93,12 @@ class ParticipantRepository extends ServiceEntityRepository implements PasswordU
 
     }
 
+    public function findMails()
+    {
+        return $this->createQueryBuilder('p')
+            ->select('p.mail')
+            ->getQuery()
+            ->getSingleColumnResult();
+    }
+
 }

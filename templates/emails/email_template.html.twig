@@ -1,0 +1,7 @@
+<h1>Une nouvelle sortie a été publiée !</h1>
+<ul>
+    <li>{{ sortie.nom }} par {{ sortie.organisateur.nom }} {{ sortie.organisateur.prenom }}</li>
+    <li>Campus: {{ sortie.campus.nom }}</li>
+    <li>Le {{ sortie.dateLimiteInscription|date('d/m/Y') }}</li>
+    <li><a href="http://localhost/projet-sortir/public/sortie/detail/{{ sortie.id }}">Voir la sortie</a></li>
+</ul>
