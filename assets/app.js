@@ -1,5 +1,4 @@
 import './bootstrap.js';
-import './js/AjaxRequest.js';
 /*
  * Welcome to your app's main JavaScript file!
  *
@@ -7,5 +6,10 @@ import './js/AjaxRequest.js';
  * which should already be in your base.html.twig.
  */
 import './styles/app.css';
+import {AjaxRequest} from "./js/AjaxRequest.js";
+
+if (window.location.pathname.includes('sortie/detail')) {
+    AjaxRequest.getLieu();
+}
 
 console.log('This log comes from assets/app.js - welcome to AssetMapper! 🎉');

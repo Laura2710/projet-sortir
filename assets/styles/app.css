@@ -149,8 +149,17 @@ form ul li {
     gap: 1em;
 }
 
-.detail-sortie div {
-    max-width: 50%;
+.detail-sortie {
+    width: fit-content;
+    margin: 0 auto;
+}
+
+.detail-sortie .description {
+    max-width: 400px;
+}
+.detail-sortie #map {
+    width: 300px;
+    height: 300px;
 }
 
 .detail-sortie p {
@@ -177,7 +186,7 @@ h1 {
     background-color: lightpink;
 }
 
-.etat-sortie.annulee {
+.etat-sortie.annulee, .etat-sortie.terminee, .etat-sortie.passee {
     background-color: lightgray;
 }
 
@@ -185,7 +194,7 @@ h1 {
     width: fit-content;
 }
 
-.detail-sortie span {
+.detail-sortie .bold {
     font-weight: bold;
 }
 .flash-message {
