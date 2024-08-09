@@ -1,6 +1,6 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Hello ParticipantController!{% endblock %}
+{% block title %}Profils{% endblock %}
 
 {% block body %}
     {% for label, messages in app.flashes %}
@@ -11,12 +11,34 @@
         {% endfor %}
     {% endfor %}
     {% if app.user == participant %}
+        <div class="centrer">
 <h2>Mon profil</h2>
     {{ form_start(participantForm) }}
     {{ form_widget(participantForm) }}
-    <button>Mettre à jour !</button>
+            <div class="centrer">
+                <button class="btn btn-primaire" >Mettre à jour !</button>
+                <a class="btn btn-secondaire" href={{ path('sortie_liste') }}>Annuler</a>
+            </div>
     {{ form_end(participantForm) }}
-        {% else %}
+        </div>
+    {% else %}
+        <h2 class="centrer">{{ participant.pseudo }}</h2>
+        <div class="flex centrer details-participant"  >
+        <div>
+            <p><span>Prénom :</span></p>
+            <p><span>Nom :</span></p>
+            <p><span>Téléphone :</span></p>
+            <p><span>Email :</span></p>
+            <p><span>Campus :</span></p>
+        </div>
+        <div>
+            <p>{{ participant.prenom }}</p>
+            <p>{{ participant.nom }}</p>
+            <p>{{ participant.telephone }}</p>
+            <p>{{ participant.mail }}</p>
+            <p>{{ participant.campus.nom }}</p>
+        </div>
+        </div>
 
 
 
