@@ -16,12 +16,13 @@
     {{ form_start(participantForm) }}
     {{ form_widget(participantForm) }}
             <div class="centrer">
-                <button class="btn btn-primaire" >Mettre à jour !</button>
-                <a class="btn btn-secondaire" href={{ path('sortie_liste') }}>Annuler</a>
+                <button class="btn btn-primaire zoom" >Mettre à jour !</button>
+                <a class="btn btn-secondaire" onclick="history.back()" }}>Annuler</a>
             </div>
     {{ form_end(participantForm) }}
         </div>
     {% else %}
+        <div class="centrer">
         <h2 class="centrer">{{ participant.pseudo }}</h2>
         <div class="flex centrer details-participant"  >
         <div>
@@ -38,6 +39,8 @@
             <p>{{ participant.mail }}</p>
             <p>{{ participant.campus.nom }}</p>
         </div>
+        </div>
+            <a class="btn btn-secondaire" onclick="history.back()"  }}>Retour</a>
         </div>
 
 

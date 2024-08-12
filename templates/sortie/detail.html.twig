@@ -35,7 +35,7 @@
             <div>
                 <p><span class="bold">Nom de la sortie:</span> {{ sortie.nom }}</p>
                 <p>
-                    <span class="bold">Organisateur:</span> {{ sortie.organisateur.prenom }} {{ sortie.organisateur.nom }}
+                    <span class="bold">Organisateur:</span> <a href="{{ path('participant_details', {'id':sortie.organisateur.id}) }}">{{ sortie.organisateur.prenom }} {{ sortie.organisateur.nom }}</a>
                 </p>
                 <p><span class="bold">Date et heure de la sortie:</span> le {{ sortie.dateHeureDebut|date('d/m/Y') }}
                     à {{ sortie.dateHeureDebut|date('H:i') }}</p>

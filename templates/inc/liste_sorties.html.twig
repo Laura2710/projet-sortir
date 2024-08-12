@@ -8,7 +8,7 @@
         <td>{{ sortie.participants.count() }}/{{ sortie.nbInscriptionsMax }}</td>
         <td>{{ sortie.etat.libelle.value }}</td>
         <td>{% if sortie.participants.contains(app.user) %} X {% endif %}</td>
-        <td>{{ sortie.organisateur.prenom }}.{{ sortie.organisateur.nom|first }}</td>
+        <td><a href="{{ path('participant_details', {'id':sortie.organisateur.id}) }}">{{ sortie.organisateur.prenom }}.{{ sortie.organisateur.nom|first }}</a></td>
         <td>
             <div class="flex-actions">
                 {% if is_granted("view", sortie) %}
