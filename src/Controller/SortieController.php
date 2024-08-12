@@ -248,6 +248,7 @@ class SortieController extends AbstractController
 
             $entityManager->persist($sortie);
             $entityManager->flush();
+            $this->addFlash('success', 'La sortie a bien été créée!');
             return $this->redirectToRoute('sortie_liste');
         }
 
@@ -274,6 +275,15 @@ class SortieController extends AbstractController
 
         return $this->render('sortie/creer.html.twig', [
             'creerSortieForm' => $creerSortieForm->createView(),
+        ]);
+    }
+
+    #[Route('/sortie/lieu', name: 'sortie_lieu', methods: ['POST'])]
+    public function lieu(Request $request, LieuRepository $lieuRepository): Response
+    {
+        $lieu = $lieuRepository->find($request->request->get('id'));
+        return $this->json([
+            'rue' => $lieu ? $lieu->getRue() : null,
         ]);
     }
 }

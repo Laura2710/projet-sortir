@@ -6,10 +6,9 @@ use App\Entity\Campus;
 use App\Entity\Lieu;
 use App\Entity\Sortie;
 use App\Entity\Ville;
-use Doctrine\ORM\EntityRepository;
-use Doctrine\ORM\QueryBuilder;
 use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Symfony\Component\Form\AbstractType;
+use Symfony\Component\Form\Extension\Core\Type\DateTimeType;
 use Symfony\Component\Form\Extension\Core\Type\DateType;
 use Symfony\Component\Form\Extension\Core\Type\NumberType;
 use Symfony\Component\Form\Extension\Core\Type\TextareaType;
@@ -29,15 +28,15 @@ class CreerSortieType extends AbstractType
                 'label' => 'Nom de la sortie',
                 'empty_data' => '',
             ])
-            ->add('dateHeureDebut', DateType::class, [
+            ->add('dateHeureDebut', DateTimeType::class, [
                 'label' => 'Date et heure de la sortie',
                 'widget' => 'single_text',
-                'empty_data' => ' ',
+                //'empty_data' => '',
             ])
             ->add('dateLimiteInscription', DateType::class, [
                 'label' => 'Date limite d\'inscription',
                 'widget' => 'single_text',
-                'empty_data' => ' ',
+                //'empty_data' => '',
             ])
             ->add('duree', NumberType::class, [
                 'label' => 'Durée',
@@ -97,6 +96,7 @@ class CreerSortieType extends AbstractType
                 'choice_label' => 'nom',
                 'placeholder' => 'Choisissez un lieu',
                 'label' => 'Lieu',
+                'mapped' => true
             ]);
 
             $form->add('codePostal', TextType::class, [
@@ -115,8 +115,8 @@ class CreerSortieType extends AbstractType
         );
 
         //
-        $formModifierLieu = function (FormInterface $form, Lieu $lieu = null) {
-            $rue = (null === $lieu) ? '' : $lieu->getRue();
+       /* $formModifierLieu = function (FormInterface $form, Lieu $lieu = null) {
+            $rue = $lieu ? $lieu->getRue() : '';
 
             $form->add('rue', TextType::class, [
                 'disabled' => true,
@@ -128,10 +128,10 @@ class CreerSortieType extends AbstractType
         $builder->get('lieu')->addEventListener(
             FormEvents::POST_SUBMIT,
             function (FormEvent $event) use ($formModifierLieu) {
-                $lieu = $event->getForm()->getData();
+                $lieu = $event->getForm()->getData();dump($lieu);
                 $formModifierLieu($event->getForm()->getParent(), $lieu);
             }
-        );
+        );*/
         //
     }
 
