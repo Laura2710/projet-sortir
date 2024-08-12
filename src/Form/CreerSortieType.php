@@ -87,8 +87,10 @@ class CreerSortieType extends AbstractType
                 'mapped' => false,
             ]);
 
-        $formModifier = function(FormInterface $form, Ville $ville = null){
+        $formModifierVille = function(FormInterface $form, Ville $ville = null){
             $lieu = (null === $ville) ? [] : $ville->getLieus();
+            $codePostal = $ville ? $ville->getCodePostal() : '';
+
             $form->add('lieu', EntityType::class, [
                 'class' => Lieu::class,
                 'choices' => $lieu,
@@ -96,15 +98,41 @@ class CreerSortieType extends AbstractType
                 'placeholder' => 'Choisissez un lieu',
                 'label' => 'Lieu',
             ]);
+
+            $form->add('codePostal', TextType::class, [
+                'disabled' => true,
+                'mapped' => false,
+                'data' => $codePostal,
+            ]);
         };
 
-        $builder->get('ville')->AddEventListener(
+        $builder->get('ville')->addEventListener(
             FormEvents::POST_SUBMIT,
-            function (FormEvent $event) use ($formModifier){
+            function (FormEvent $event) use ($formModifierVille){
                 $ville = $event->getForm()->getData();
-                $formModifier($event->getForm()->getParent(), $ville);
+                $formModifierVille($event->getForm()->getParent(), $ville);
             }
         );
+
+        //
+        $formModifierLieu = function (FormInterface $form, Lieu $lieu = null) {
+            $rue = (null === $lieu) ? '' : $lieu->getRue();
+
+            $form->add('rue', TextType::class, [
+                'disabled' => true,
+                'mapped' => false,
+                'data' => $rue,
+            ]);
+        };
+
+        $builder->get('lieu')->addEventListener(
+            FormEvents::POST_SUBMIT,
+            function (FormEvent $event) use ($formModifierLieu) {
+                $lieu = $event->getForm()->getData();
+                $formModifierLieu($event->getForm()->getParent(), $lieu);
+            }
+        );
+        //
     }
 
     public function configureOptions(OptionsResolver $resolver): void

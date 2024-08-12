@@ -227,6 +227,10 @@ class SortieController extends AbstractController
         $creerSortieForm = $this->createForm(CreerSortieType::class, $sortie, ['lieus'=>$lieus]);
         $creerSortieForm->handleRequest($request);
 
+        //
+
+        //
+
         if ($creerSortieForm->isSubmitted() && $creerSortieForm->isValid()) {
             $sortie->setOrganisateur($user);
             $etat = $etatRepository->findOneBy(['libelle'=>EtatEnum::Creee]);
