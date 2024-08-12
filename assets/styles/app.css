@@ -81,6 +81,11 @@ button {
     transition: all .24s ease-in;
 }
 
+button a {
+    color: #222222;
+    text-decoration: none;
+}
+
 .btn {
     margin-top: 1em;
     padding: 8px 16px;

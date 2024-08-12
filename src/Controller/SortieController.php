@@ -234,16 +234,12 @@ class SortieController extends AbstractController
     public function creer(Request $request, LieuRepository $lieuRepository, EntityManagerInterface $entityManager, EtatRepository $etatRepository): Response
     {
         $sortie = new Sortie();
-        $lieus = $lieuRepository->findAll();
+        $lieux = $lieuRepository->findAll();
         $user = $this->getUser();
         $sortie->setCampus($this->getUser()->getCampus());
 
-        $creerSortieForm = $this->createForm(CreerSortieType::class, $sortie, ['lieus'=>$lieus]);
+        $creerSortieForm = $this->createForm(CreerSortieType::class, $sortie, ['lieus'=>$lieux]);
         $creerSortieForm->handleRequest($request);
-
-        //
-
-        //
 
         if ($creerSortieForm->isSubmitted() && $creerSortieForm->isValid()) {
             $sortie->setOrganisateur($user);
@@ -251,6 +247,27 @@ class SortieController extends AbstractController
             $sortie->setEtat($etat);
 
             $entityManager->persist($sortie);
+            $entityManager->flush();
+            return $this->redirectToRoute('sortie_liste');
+        }
+
+        return $this->render('sortie/creer.html.twig', [
+            'creerSortieForm' => $creerSortieForm->createView(),
+        ]);
+    }
+
+    // TODO Méthode modifier
+    #[Route('/sortie/modifier/{id}', name: 'sortie_modifier', methods: ['GET', 'POST'])]
+    public function modifier(Request $request, Sortie $sortie, EntityManagerInterface $entityManager, LieuRepository $lieuRepository) : Response
+    {
+        $lieux = $lieuRepository->findAll();
+        // TODO comparer user avec organisateur
+        $user = $this->getUser();
+
+        $creerSortieForm = $this->createForm(CreerSortieType::class, $sortie, ['lieus'=>$lieux]);
+        $creerSortieForm->handleRequest($request);
+
+        if ($creerSortieForm->isSubmitted() && $creerSortieForm->isValid()) {
             $entityManager->flush();
             return $this->redirectToRoute('sortie_liste');
         }
