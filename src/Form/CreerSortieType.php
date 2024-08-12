@@ -97,6 +97,7 @@ class CreerSortieType extends AbstractType
                 'choice_label' => 'nom',
                 'placeholder' => 'Choisissez un lieu',
                 'label' => 'Lieu',
+                'mapped' => false
             ]);
 
             $form->add('codePostal', TextType::class, [
@@ -115,8 +116,8 @@ class CreerSortieType extends AbstractType
         );
 
         //
-        $formModifierLieu = function (FormInterface $form, Lieu $lieu = null) {
-            $rue = (null === $lieu) ? '' : $lieu->getRue();
+       /* $formModifierLieu = function (FormInterface $form, Lieu $lieu = null) {
+            $rue = $lieu ? $lieu->getRue() : '';
 
             $form->add('rue', TextType::class, [
                 'disabled' => true,
@@ -128,10 +129,10 @@ class CreerSortieType extends AbstractType
         $builder->get('lieu')->addEventListener(
             FormEvents::POST_SUBMIT,
             function (FormEvent $event) use ($formModifierLieu) {
-                $lieu = $event->getForm()->getData();
+                $lieu = $event->getForm()->getData();dump($lieu);
                 $formModifierLieu($event->getForm()->getParent(), $lieu);
             }
-        );
+        );*/
         //
     }
 

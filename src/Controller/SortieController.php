@@ -16,6 +16,7 @@ use App\Repository\SortieRepository;
 use App\Service\MajEtatSortie;
 use App\Service\NotifierParticipant;
 use Doctrine\ORM\EntityManagerInterface;
+use phpDocumentor\Reflection\Types\This;
 use PHPUnit\Util\Json;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -257,6 +258,15 @@ class SortieController extends AbstractController
 
         return $this->render('sortie/creer.html.twig', [
             'creerSortieForm' => $creerSortieForm->createView(),
+        ]);
+    }
+
+    #[Route('/sortie/lieu', name: 'sortie_lieu', methods: ['POST'])]
+    public function lieu(Request $request, LieuRepository $lieuRepository): Response
+    {
+        $lieu = $lieuRepository->find($request->request->get('id'));
+        return $this->json([
+            'rue' => $lieu ? $lieu->getRue() : null,
         ]);
     }
 }
