@@ -30,8 +30,8 @@
                 <a href="{{ path('admin_utilisateurs') }}">Utilisateurs</a>
             {% endif %}
             <a href="{{ path('sortie_liste') }}">Accueil</a>
-            <a href="">Mon profil</a>
-            <a href="{{  path('app_logout') }}">Se déconnecter</a>
+            <a href="{{ path('participant_details', {'id':app.user.id}) }}">Mon profil</a>
+            <a href="{{ path('app_logout') }}">Se déconnecter</a>
         </nav>
         {% endif %}
     </div>
@@ -57,5 +57,6 @@
     {% block body %}{% endblock %}
 </div>
 <footer></footer>
+{% block js %}{% endblock %}
 </body>
 </html>

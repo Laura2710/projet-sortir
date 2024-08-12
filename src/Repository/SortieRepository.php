@@ -105,9 +105,12 @@ class SortieRepository extends ServiceEntityRepository
                 ->setParameter('dateFin', $dateFin);
         }
 
-        return $query->andWhere('s.campus = :campus')
-            ->setParameter('campus', $filtre->getCampus())
-            ->orderBy('s.dateHeureDebut', 'DESC')
+        if ($filtre->getCampus() != null) {
+            $query->andWhere('s.campus = :campus')
+                ->setParameter('campus', $filtre->getCampus());
+        }
+        return
+            $query->orderBy('s.dateHeureDebut', 'DESC')
             ->getQuery()
             ->getResult();
 

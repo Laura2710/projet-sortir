@@ -4,6 +4,13 @@
     {{ sortie.nom }}
 {% endblock %}
 
+{% block stylesheets %}
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+          integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+          crossorigin=""/>
+{% endblock %}
+
+
 {% block body %}
     {% set className = '' %}
 
@@ -11,60 +18,54 @@
         {% set className = 'ouverte' %}
     {% elseif sortie.etat.libelle.value == 'Cloturee' %}
         {% set className = 'cloturee' %}
-    {% elseif sortie.etat.libelle.value == 'Annulée' or sortie.etat.libelle.value == 'Activité passée' %}
+    {% elseif sortie.etat.libelle.value == 'Annulée' %}
         {% set className = 'annulee' %}
+    {% elseif sortie.etat.libelle.value == 'Terminée' %}
+        {% set className = 'terminee' %}
     {% else %}
         {% set className = '' %}
     {% endif %}
 
 
     <h1>Detail de la sortie : {{ sortie.nom }}<br>
-        <span class="etat-sortie {{ className }}">{{ className }}</span>
+        <span class="etat-sortie {{ className }}">{{ className|upper }}</span>
     </h1>
-    <div class="flex detail-sortie">
-        <div>
-            <p><span>Nom de la sortie:</span> {{ sortie.nom }}</p>
-            <p><span>Organisateur:</span> {{ sortie.organisateur.prenom }} {{ sortie.organisateur.nom }} </p>
-            <p><span>Date et heure de la sortie:</span> le {{ sortie.dateHeureDebut|date('d/m/Y') }} à {{ sortie.dateHeureDebut|date('H:i') }}</p>
-            <p><span>Date limite d'inscription:</span> le {{ sortie.dateLimiteInscription|date('d/m/Y') }}</p>
-            <p><span>Nombre de place:</span> {{ sortie.nbInscriptionsMax }}</p>
-            <p><span>Durée:</span> {{ sortie.duree }} minutes</p>
-            <p><span>Description et infos:</span> {{ sortie.infosSortie }}</p>
+    <div class="detail-sortie">
+        <div class="flex">
+            <div>
+                <p><span class="bold">Nom de la sortie:</span> {{ sortie.nom }}</p>
+                <p>
+                    <span class="bold">Organisateur:</span> <a href="{{ path('participant_details', {'id':sortie.organisateur.id}) }}">{{ sortie.organisateur.prenom }} {{ sortie.organisateur.nom }}</a>
+                </p>
+                <p><span class="bold">Date et heure de la sortie:</span> le {{ sortie.dateHeureDebut|date('d/m/Y') }}
+                    à {{ sortie.dateHeureDebut|date('H:i') }}</p>
+                <p><span class="bold">Date limite d'inscription:</span>
+                    le {{ sortie.dateLimiteInscription|date('d/m/Y') }}
+                </p>
+                <p><span class="bold">Nombre de place:</span> {{ sortie.nbInscriptionsMax }}</p>
+                <p><span class="bold">Durée:</span> {{ sortie.duree }} minutes</p>
+                <p class="description"><span class="bold">Description et infos:</span> {{ sortie.infosSortie }}</p>
+            </div>
+            <div id="gps">
+                <p><span class="bold">Campus:</span> {{ sortie.campus.nom }}</p>
+                <p><span class="bold">Lieu: </span>{{ sortie.lieu.nom }}</p>
+                <p><span class="bold">Rue: </span>{{ sortie.lieu.rue }}</p>
+                <p><span class="bold">Code postal:</span> {{ sortie.lieu.ville.codePostal }}</p>
+                <p>Latitude: <span id="latitude">{{ sortie.lieu.latitude|default('non renseignée') }}</span></p>
+                <p>Longitude: <span id="longitude">{{ sortie.lieu.longitude|default('non renseignée') }}</span></p>
+            </div>
         </div>
-        <div>
-            <p><span>Campus:</span> {{ sortie.campus.nom }}</p>
-            <p><span>Lieu: </span>{{ sortie.lieu.nom }}</p>
-            <p><span>Rue: </span>{{ sortie.lieu.rue }}</p>
-            <p><span>Code postal:</span> {{ sortie.lieu.ville.codePostal }}</p>
-            <p><span>Latitude:</span> {{ sortie.lieu.latitude|default('non renseignée') }}</p>
-            <p><span>Longitude:</span> {{ sortie.lieu.longitude|default('non renseignée') }}</p>
-        </div>
+
+        {% include 'inc/liste_participants.html.twig' %}
+
     </div>
 
 
-    <table class="table-participants">
-        <thead>
-        <tr>
-            <th>Pseudo</th>
-            <th>Nom</th>
-        </tr>
-        </thead>
-        <tbody>
-        {% if sortie.participants is not empty %}
-            {% for participant in sortie.participants %}
-                <tr>
-                    <td>{{ participant.pseudo }}</td>
-                    <td>{{ participant.prenom }} {{ participant.nom }}</td>
-                </tr>
-            {% endfor %}
-        {% else %}
-            <tr>
-                <td colspan="2">Aucun participant</td>
-            </tr>
-        {% endif %}
-        </tbody>
-    </table>
+{% endblock %}
 
-
+{% block js %}
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+            integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+            crossorigin=""></script>
 {% endblock %}
 

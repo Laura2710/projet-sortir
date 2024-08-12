@@ -99,6 +99,7 @@ button {
 .btn-primaire {
     background: hsl(340 100% 60% / 1);
     color: white;
+    cursor: pointer;
 }
 
 .btn-primaire:hover {
@@ -113,6 +114,15 @@ button {
 .btn-secondaire:hover {
     background: hsl(340 100% 60% / 1);
     color: white;
+    cursor: pointer;
+}
+
+.zoom {
+    transition: transform .2s;
+}
+
+.zoom:hover {
+    transform: scale(1.2);
 }
 
 table, th, td {
@@ -149,8 +159,17 @@ form ul li {
     gap: 1em;
 }
 
-.detail-sortie div {
-    max-width: 50%;
+.detail-sortie {
+    width: fit-content;
+    margin: 0 auto;
+}
+
+.detail-sortie .description {
+    max-width: 400px;
+}
+.detail-sortie #map {
+    width: 300px;
+    height: 300px;
 }
 
 .detail-sortie p {
@@ -177,7 +196,7 @@ h1 {
     background-color: lightpink;
 }
 
-.etat-sortie.annulee {
+.etat-sortie.annulee, .etat-sortie.terminee, .etat-sortie.passee {
     background-color: lightgray;
 }
 
@@ -185,7 +204,14 @@ h1 {
     width: fit-content;
 }
 
-.detail-sortie span {
+.details-participant {
+    padding-top: 2em;
+}
+
+.details-participant span {
+    font-weight: bold;
+}
+.detail-sortie .bold {
     font-weight: bold;
 }
 .flash-message {

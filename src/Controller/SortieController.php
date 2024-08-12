@@ -11,13 +11,20 @@ use App\Form\AnnulationSortieType;
 use App\Form\SortieFiltreType;
 use App\Repository\EtatRepository;
 use App\Repository\LieuRepository;
+use App\Repository\ParticipantRepository;
 use App\Repository\SortieRepository;
 use App\Service\MajEtatSortie;
+use App\Service\NotifierParticipant;
 use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Util\Json;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Mailer\MailerInterface;
+use Symfony\Component\Mime\Address;
+use Symfony\Component\Mime\Email;
+use Symfony\Component\Notifier\Notification\Notification;
+use Symfony\Component\Notifier\NotifierInterface;
 use Symfony\Component\Routing\Attribute\Route;
 
 class SortieController extends AbstractController
@@ -29,13 +36,16 @@ class SortieController extends AbstractController
         $majEtatSortie->mettreAjourEtatSortie();
 
         $filtre = new FiltreSortie();
-        $filtre->setCampus($this->getUser()->getCampus());
+        //$filtre->setCampus($this->getUser()->getCampus());
         $formulaire_filtre = $this->createForm(SortieFiltreType::class, $filtre);
         $formulaire_filtre->handleRequest($request);
+        $sorties = $sortieRepository->findSorties($this->getUser());
 
-        $sorties = $formulaire_filtre->isSubmitted() && $formulaire_filtre->isValid()
-            ? $sortieRepository->findByCriteres($filtre, $this->getUser())
-            : $sortieRepository->findSorties($this->getUser());
+        if ($formulaire_filtre->isSubmitted() && $formulaire_filtre->isValid()) {
+            $campus = $formulaire_filtre->get('campus')->getData();
+            $filtre->setCampus($campus);
+            $sorties = $sortieRepository->findByCriteres($filtre, $this->getUser());
+        }
 
         return $this->render('sortie/liste.html.twig', [
             'sorties' => $sorties,
@@ -99,7 +109,7 @@ class SortieController extends AbstractController
 
     }
 
-    #[Route('/sortie/{id}', name: 'sortie_detail', requirements: ['id' => '\d+'], methods: ['GET'])]
+    #[Route('/sortie/detail/{id}', name: 'sortie_detail', requirements: ['id' => '\d+'], methods: ['GET'])]
     public function show(Sortie $sortieParam, SortieRepository $sortieRepository): Response
     {
         $sortie = $sortieRepository->findSortie($sortieParam);
@@ -182,6 +192,7 @@ class SortieController extends AbstractController
         EntityManagerInterface $entityManager,
         SortieRepository       $sortieRepository,
         EtatRepository $etatRepository,
+        NotifierParticipant $notifierParticipant
     ): Response
     {
 
@@ -211,6 +222,9 @@ class SortieController extends AbstractController
         $nouvelEtat->setLibelle(EtatEnum::Ouverte);
         $sortie->setEtat($nouvelEtat);
         $entityManager->flush();
+
+        // notification des participants par email
+        $notifierParticipant->alerterParEmail($sortie);
 
         $this->addFlash('success', 'La sortie a bien été publiée.');
         return $this->redirectToRoute('sortie_liste');
