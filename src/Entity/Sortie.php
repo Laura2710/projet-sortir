@@ -3,6 +3,7 @@
 namespace App\Entity;
 
 use App\Repository\SortieRepository;
+use DateTimeInterface;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
@@ -19,12 +20,13 @@ class Sortie
     #[ORM\Column(length: 50)]
     #[Assert\NotBlank(message: "Le nom est requis")]
     #[Assert\Length(min:3, max:50, minMessage: 'Le nom doit comporter {{ limit }} caractères minimum', maxMessage: 'Le nom doit comporter {{ limit }} caractères maximum')]
-    #[Assert\Regex(pattern: '/^[A\-zÀ\-ÿ\- ]+$/', message: 'Le nom comporte des caractères interdits')]
+    #[Assert\Regex(pattern: '/^[A-zÀ-ÿ\- ]+$/', message: 'Le nom comporte des caractères interdits')]
     private ?string $nom = null;
 
     #[ORM\Column(type: Types::DATETIME_MUTABLE)]
+    #[Assert\Type(DateTimeInterface::class)]
     #[Assert\NotBlank(message: "La date de début de la sortie est requis")]
-    #[Assert\DateTime(message: "La date n'est pas valide")]
+    ##[Assert\DateTime(message: "La date n'est pas valide")]
     #[Assert\GreaterThan('today', message: 'La date doit être postérieure à celle d\'aujourd\'hui')]
     private ?\DateTimeInterface $dateHeureDebut = null;
 
@@ -33,7 +35,7 @@ class Sortie
 
     #[ORM\Column(type: Types::DATE_MUTABLE)]
     #[Assert\NotBlank(message: "La date de limite d'inscription est requis")]
-    #[Assert\Date(message: "La date de limite d'inscription n'est pas valide")]
+   # #[Assert\Date(message: "La date de limite d'inscription n'est pas valide")]
     #[Assert\LessThanOrEqual(propertyPath: 'dateHeureDebut')]
     private ?\DateTimeInterface $dateLimiteInscription = null;
 

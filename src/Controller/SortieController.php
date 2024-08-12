@@ -242,10 +242,6 @@ class SortieController extends AbstractController
         $creerSortieForm = $this->createForm(CreerSortieType::class, $sortie, ['lieus'=>$lieus]);
         $creerSortieForm->handleRequest($request);
 
-        //
-
-        //
-
         if ($creerSortieForm->isSubmitted() && $creerSortieForm->isValid()) {
             $sortie->setOrganisateur($user);
             $etat = $etatRepository->findOneBy(['libelle'=>EtatEnum::Creee]);
@@ -253,6 +249,7 @@ class SortieController extends AbstractController
 
             $entityManager->persist($sortie);
             $entityManager->flush();
+            $this->addFlash('success', 'La sortie a bien été créée!');
             return $this->redirectToRoute('sortie_liste');
         }
 
