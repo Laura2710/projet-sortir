@@ -2,9 +2,7 @@
 
 namespace App\Repository;
 
-use App\Entity\Etat;
 use App\Entity\Sortie;
-use App\Enum\EtatEnum;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\ORM\QueryBuilder;
 use Doctrine\ORM\Tools\Pagination\Paginator;
@@ -120,10 +118,6 @@ class SortieRepository extends ServiceEntityRepository
             ->setFirstResult($offset)
             ->getQuery();
         return new Paginator($query);
-        /*return
-            $query->orderBy('s.dateHeureDebut', 'DESC')
-            ->getQuery()
-            ->getResult();*/
 
     }
 
