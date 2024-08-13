@@ -2,6 +2,7 @@
 
 {% block body %}
     <h1>Bienvenue sur Sortie.com !</h1>
+
     <h2>Filtrer les sorties</h2>
     {{ form_start(formulaire_filtres, {'attr': {'class':'formulaire-filtre'}}) }}
     {{ form_row(formulaire_filtres.campus) }}
@@ -21,6 +22,7 @@
         </div>
     </div>
     {{ form_end(formulaire_filtres) }}
+
 
     <table class="liste-sorties">
         <thead>
@@ -46,6 +48,22 @@
         {% endif %}
         </tbody>
     </table>
+
+    <div class="pagination">
+        <p>Nombre total de sorties : {{ sorties|length }}</p>
+
+        {% if filtreParCritere == false %}
+        <div class="flex">
+            {% if previous >= 0 %}
+                <a href="{{ path('sortie_liste', {'offset': previous}) }}">Précédent</a>
+            {% endif %}
+
+            {% if next < sorties|length %}
+                <a href="{{ path('sortie_liste', {'offset': next}) }}">Suivant</a>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
 {% endblock %}
 
 {% block title %}

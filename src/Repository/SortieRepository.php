@@ -7,6 +7,7 @@ use App\Entity\Sortie;
 use App\Enum\EtatEnum;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\ORM\QueryBuilder;
+use Doctrine\ORM\Tools\Pagination\Paginator;
 use Doctrine\Persistence\ManagerRegistry;
 
 /**
@@ -14,6 +15,7 @@ use Doctrine\Persistence\ManagerRegistry;
  */
 class SortieRepository extends ServiceEntityRepository
 {
+    public const SORTIE_PAR_PAGE = 10;
     public function __construct(ManagerRegistry $registry)
     {
         parent::__construct($registry, Sortie::class);
@@ -32,14 +34,15 @@ class SortieRepository extends ServiceEntityRepository
             ->addSelect('l')
             ->leftJoin('s.participants', 'p')
             ->addSelect('p');
+
     }
 
-    public function findSorties($utilisateur)
+    public function findSorties($utilisateur, int $offset)
     {
         $now = new \DateTime();
         $lastMonth = $now->sub(new \DateInterval('P1M'));
 
-        return $this->queryBuilderSortie()
+        $query = $this->queryBuilderSortie()
             ->andWhere('(e.libelle <> \'Créée\' OR o = :utilisateur)')
             ->setParameter('utilisateur', $utilisateur)
             ->andWhere('c = :campus')
@@ -47,8 +50,10 @@ class SortieRepository extends ServiceEntityRepository
             ->andWhere('s.dateHeureDebut > :date')
             ->setParameter('date', $lastMonth)
             ->orderBy('s.dateHeureDebut', 'DESC')
-            ->getQuery()
-            ->getResult();
+            ->setMaxResults(self::SORTIE_PAR_PAGE)
+            ->setFirstResult($offset)
+            ->getQuery();
+        return new Paginator($query);
     }
 
     public function findByCriteres($filtre, $utilisateur)

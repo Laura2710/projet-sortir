@@ -133,7 +133,7 @@ table, th, td {
 }
 
 .liste-sorties {
-    margin: 5em 0;
+    margin: 5em 0 1em;
 }
 
 form ul li {
@@ -244,4 +244,35 @@ h1 {
 }
 .checkbox label {
     display: inline-block;
+}
+
+main {
+    min-height: 70vh;
+}
+
+footer {
+    margin-top: 3em;
+    background-color: #f2f2f2;
+    padding: 1em;
+}
+
+footer p {
+    text-align: center;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+.pagination p {
+    text-align: right;
+}
+
+.pagination a {
+    display: block;
+    text-align: center;
+}
+
+.pagination .flex {
+    justify-content: center;
 }
