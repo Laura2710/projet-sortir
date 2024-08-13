@@ -56,7 +56,7 @@ class SortieRepository extends ServiceEntityRepository
         return new Paginator($query);
     }
 
-    public function findByCriteres($filtre, $utilisateur)
+    public function findByCriteres($filtre, $utilisateur, $offset)
     {
         $now = new \DateTime();
         $lastMonth = $now->sub(new \DateInterval('P1M'));
@@ -114,10 +114,16 @@ class SortieRepository extends ServiceEntityRepository
             $query->andWhere('s.campus = :campus')
                 ->setParameter('campus', $filtre->getCampus());
         }
-        return
+
+        $query = $query->orderBy('s.dateHeureDebut', 'DESC')
+            ->setMaxResults(self::SORTIE_PAR_PAGE)
+            ->setFirstResult($offset)
+            ->getQuery();
+        return new Paginator($query);
+        /*return
             $query->orderBy('s.dateHeureDebut', 'DESC')
             ->getQuery()
-            ->getResult();
+            ->getResult();*/
 
     }
 

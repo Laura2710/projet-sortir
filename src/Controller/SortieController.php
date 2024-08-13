@@ -37,27 +37,27 @@ class SortieController extends AbstractController
         $majEtatSortie->mettreAjourEtatSortie();
 
         $filtre = new FiltreSortie();
-        //$filtre->setCampus($this->getUser()->getCampus());
         $formulaire_filtre = $this->createForm(SortieFiltreType::class, $filtre);
         $formulaire_filtre->handleRequest($request);
 
         $offset = max(0, $request->query->getInt('offset', 0));
-        $sorties = $sortieRepository->findSorties($this->getUser(), $offset);
-        $filtreParCritere = false;
 
+        // Si le formulaire est soumis et valide, appliquer les filtres
         if ($formulaire_filtre->isSubmitted() && $formulaire_filtre->isValid()) {
             $campus = $formulaire_filtre->get('campus')->getData();
             $filtre->setCampus($campus);
-            $sorties = $sortieRepository->findByCriteres($filtre, $this->getUser());
-            $filtreParCritere = true;
+            $sorties = $sortieRepository->findByCriteres($filtre, $this->getUser(), $offset);
+        } else {
+            // Récupérer les sorties
+            $sorties = $sortieRepository->findSorties($this->getUser(), $offset);
         }
+
 
         return $this->render('sortie/liste.html.twig', [
             'sorties' => $sorties,
             'formulaire_filtres' => $formulaire_filtre->createView(),
             'previous' => $offset - SortieRepository::SORTIE_PAR_PAGE,
             'next' => min(count($sorties), $offset + SortieRepository::SORTIE_PAR_PAGE),
-            'filtreParCritere' => $filtreParCritere,
         ]);
     }
     #[Route('/sortie/inscrire/{id}', name: 'inscrire', methods: ['GET'])]
