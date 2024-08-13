@@ -146,6 +146,11 @@ form ul li {
     color: red;
 }
 
+.btn-creer {
+    display:flex;
+    justify-content: center;
+}
+
 
 .infoUtilisateurConnecte {
     margin: 1rem 0;

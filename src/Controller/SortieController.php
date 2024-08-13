@@ -253,11 +253,11 @@ class SortieController extends AbstractController
         }
 
         return $this->render('sortie/creer.html.twig', [
+            'modeModif'=> false,
             'creerSortieForm' => $creerSortieForm->createView(),
         ]);
     }
 
-    // TODO Méthode modifier
     #[Route('/sortie/modifier/{id}', name: 'sortie_modifier', methods: ['GET', 'POST'])]
     public function modifier(Request $request, Sortie $sortie, EntityManagerInterface $entityManager, LieuRepository $lieuRepository) : Response
     {
@@ -265,7 +265,7 @@ class SortieController extends AbstractController
         // TODO comparer user avec organisateur
         $user = $this->getUser();
 
-        $creerSortieForm = $this->createForm(CreerSortieType::class, $sortie, ['lieus'=>$lieux]);
+        $creerSortieForm = $this->createForm(CreerSortieType::class, $sortie, ['lieus'=>$lieux, 'modeModif' => true]);
         $creerSortieForm->handleRequest($request);
 
         if ($creerSortieForm->isSubmitted() && $creerSortieForm->isValid()) {
@@ -274,6 +274,7 @@ class SortieController extends AbstractController
         }
 
         return $this->render('sortie/creer.html.twig', [
+            'modeModif'=> true,
             'creerSortieForm' => $creerSortieForm->createView(),
         ]);
     }

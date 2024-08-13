@@ -31,12 +31,12 @@ class CreerSortieType extends AbstractType
             ->add('dateHeureDebut', DateTimeType::class, [
                 'label' => 'Date et heure de la sortie',
                 'widget' => 'single_text',
-                //'empty_data' => '',
+                'empty_data' => ' ',
             ])
             ->add('dateLimiteInscription', DateType::class, [
                 'label' => 'Date limite d\'inscription',
                 'widget' => 'single_text',
-                //'empty_data' => '',
+                'empty_data' => ' ',
             ])
             ->add('duree', NumberType::class, [
                 'label' => 'Durée',
@@ -62,10 +62,12 @@ class CreerSortieType extends AbstractType
                 'mapped' => false,
                 'placeholder' => 'Choisissez une ville',
                 'attr' => ['class' => 'ville-select'],
+                'disabled' => $options['modeModif'],
             ])
             ->add('lieu', EntityType::class, [
                 'class' => Lieu::class,
                 'choice_label' => 'nom',
+                'mapped' => true,
                 'placeholder' => 'Choisissez un lieu',
                 'attr' => ['class' => 'lieu-select'],
             ])
@@ -106,6 +108,32 @@ class CreerSortieType extends AbstractType
             ]);
         };
 
+        // Populer ville et rue en mode Modif
+        $builder->addEventListener(FormEvents::PRE_SET_DATA, function (FormEvent $event) use ($formModifierVille) {
+        $form = $event->getForm();
+        $sortie = $event->getData();
+
+        if ($sortie && $sortie->getLieu()) {
+            $ville = $sortie->getLieu()->getVille();
+            $form->get('ville')->setData($ville);
+
+            $form->add('ville', EntityType::class, [
+                'class' => Ville::class,
+                'choice_label' => 'nom',
+                'data' => $ville,
+                'mapped' => false,
+                'disabled' => true,
+            ]);
+            $formModifierVille($form, $ville);
+            $rue = $sortie->getLieu()->getRue();
+            $form->add('rue', TextType::class, [
+                'mapped' => false,
+                'data' => $rue,
+                'disabled' => true,
+            ]);
+        }
+    });
+
         $builder->get('ville')->addEventListener(
             FormEvents::POST_SUBMIT,
             function (FormEvent $event) use ($formModifierVille){
@@ -113,6 +141,8 @@ class CreerSortieType extends AbstractType
                 $formModifierVille($event->getForm()->getParent(), $ville);
             }
         );
+
+
 
         //
        /* $formModifierLieu = function (FormInterface $form, Lieu $lieu = null) {
@@ -140,6 +170,7 @@ class CreerSortieType extends AbstractType
         $resolver->setDefaults([
             'data_class' => Sortie::class,
             'lieus' => null,
+            'modeModif' => false,
         ]);
     }
 }
