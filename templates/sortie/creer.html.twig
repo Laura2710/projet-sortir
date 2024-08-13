@@ -8,11 +8,35 @@
     <div>
         {{ form_start(creerSortieForm) }}
 
-        {{ form_widget(creerSortieForm) }}
+        {{ form_row(creerSortieForm.nom) }}
+
+        {{ form_row(creerSortieForm.dateHeureDebut) }}
+
+        {{ form_row(creerSortieForm.dateLimiteInscription) }}
+
+        {{ form_row(creerSortieForm.duree) }}
+
+        {{ form_row(creerSortieForm.nbInscriptionsMax) }}
+
+        {{ form_row(creerSortieForm.infosSortie) }}
+
+        {{ form_row(creerSortieForm.campus) }}
+
+        {{ form_row(creerSortieForm.ville) }}
+
+        {{ form_row(creerSortieForm.lieu) }}
+
+        {{ form_row(creerSortieForm.rue) }}
+
+        {{ form_row(creerSortieForm.codePostal) }}
+
+        {{ form_row(creerSortieForm.latitude) }}
+
+        {{ form_row(creerSortieForm.longitude) }}
 
         <button>Enregistrer</button>
         <button>Publier la sortie</button>
-        <button>Annuler</button>
+        <button><a href="{{ path('sortie_liste') }}">Annuler</a></button>
 
         {{ form_end(creerSortieForm) }}
     </div>

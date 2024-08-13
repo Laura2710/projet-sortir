@@ -81,6 +81,11 @@ button {
     transition: all .24s ease-in;
 }
 
+button a {
+    color: #222222;
+    text-decoration: none;
+}
+
 .btn {
     margin-top: 1em;
     padding: 8px 16px;
@@ -139,6 +144,11 @@ table, th, td {
 form ul li {
     list-style: none;
     color: red;
+}
+
+.btn-creer {
+    display:flex;
+    justify-content: center;
 }
 
 
