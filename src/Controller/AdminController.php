@@ -6,6 +6,7 @@ use App\Entity\Campus;
 use App\Entity\Participant;
 use App\Form\RegistrationFormType;
 use App\Form\UploadParticipantType;
+use App\Manager\ParticipantManagerInterface;
 use App\Repository\CampusRepository;
 use App\Repository\ParticipantRepository;
 use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
@@ -24,9 +25,9 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
 class AdminController extends AbstractController
 {
     #[Route('/utilisateurs', name: 'utilisateurs')]
-    public function gererUtilisateurs(ParticipantRepository $participantRepository): Response
+    public function gererUtilisateurs(ParticipantManagerInterface $participantManager): Response
     {
-        $participants = $participantRepository->findParticipants($this->getUser());
+        $participants = $participantManager->findParticipants($this->getUser());
         return $this->render('admin/utilisateurs-gestion.html.twig', [
             'participants' => $participants
         ]);

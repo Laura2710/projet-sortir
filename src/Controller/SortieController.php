@@ -2,7 +2,6 @@
 
 namespace App\Controller;
 
-use App\Entity\Lieu;
 use App\Entity\Sortie;
 use App\Enum\EtatEnum;
 use App\FiltreSortie\FiltreSortie;
@@ -11,20 +10,13 @@ use App\Form\AnnulationSortieType;
 use App\Form\SortieFiltreType;
 use App\Repository\EtatRepository;
 use App\Repository\LieuRepository;
-use App\Repository\ParticipantRepository;
 use App\Repository\SortieRepository;
 use App\Service\MajEtatSortie;
 use App\Service\NotifierParticipant;
 use Doctrine\ORM\EntityManagerInterface;
-use PHPUnit\Util\Json;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Mailer\MailerInterface;
-use Symfony\Component\Mime\Address;
-use Symfony\Component\Mime\Email;
-use Symfony\Component\Notifier\Notification\Notification;
-use Symfony\Component\Notifier\NotifierInterface;
 use Symfony\Component\Routing\Attribute\Route;
 
 class SortieController extends AbstractController
