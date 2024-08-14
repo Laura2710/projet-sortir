@@ -16,6 +16,7 @@ use Symfony\Component\Form\Extension\Core\Type\PasswordType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\Validator\Constraints\Image;
 
 class ParticipantType extends AbstractType
 {
@@ -56,9 +57,17 @@ class ParticipantType extends AbstractType
                 'choice_value' => 'id',
                 "label" => "Campus",
             ])
-//            ->add('avatar',TextType::class, [
-//                "label" => "Avatar"
-//            ])
+            ->add('avatar',FileType::class, [
+                "label" => "Avatar",
+                "mapped" => false,
+                'required' => false,
+                "constraints" => [
+                    new Image([
+                        'mimeTypesMessage' => "Le format de fichier n'est pas autorisé.",
+                        "mimeTypes" => ["image/jpeg","image/png"]
+                    ])
+                ]
+            ])
         ;
     }
 

@@ -9,7 +9,7 @@
     {% if sortie.participants is not empty %}
         {% for participant in sortie.participants %}
             <tr>
-                <td>{{ participant.pseudo }}</td>
+                <td><a href="{{ path('participant_details', {'id':participant.id}) }}">{{ participant.pseudo }}</a></td>
                 <td>{{ participant.prenom }} {{ participant.nom }}</td>
             </tr>
         {% endfor %}
