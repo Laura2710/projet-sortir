@@ -81,6 +81,11 @@ button {
     transition: all .24s ease-in;
 }
 
+button a {
+    color: #222222;
+    text-decoration: none;
+}
+
 .btn {
     margin-top: 1em;
     padding: 8px 16px;
@@ -133,12 +138,17 @@ table, th, td {
 }
 
 .liste-sorties {
-    margin: 5em 0;
+    margin: 5em 0 1em;
 }
 
 form ul li {
     list-style: none;
     color: red;
+}
+
+.btn-creer {
+    display:flex;
+    justify-content: center;
 }
 
 
@@ -244,6 +254,37 @@ h1 {
 }
 .checkbox label {
     display: inline-block;
+}
+
+main {
+    min-height: 70vh;
+}
+
+footer {
+    margin-top: 3em;
+    background-color: #f2f2f2;
+    padding: 1em;
+}
+
+footer p {
+    text-align: center;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+.pagination p {
+    text-align: right;
+}
+
+.pagination a {
+    display: block;
+    text-align: center;
+}
+
+.pagination .flex {
+    justify-content: center;
 }
 .avatar {
     margin-top: 50px;

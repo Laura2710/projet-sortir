@@ -36,20 +36,27 @@ class SortieController extends AbstractController
         $majEtatSortie->mettreAjourEtatSortie();
 
         $filtre = new FiltreSortie();
-        //$filtre->setCampus($this->getUser()->getCampus());
         $formulaire_filtre = $this->createForm(SortieFiltreType::class, $filtre);
         $formulaire_filtre->handleRequest($request);
-        $sorties = $sortieRepository->findSorties($this->getUser());
 
+        $offset = max(0, $request->query->getInt('offset', 0));
+
+        // Si le formulaire est soumis et valide, appliquer les filtres
         if ($formulaire_filtre->isSubmitted() && $formulaire_filtre->isValid()) {
             $campus = $formulaire_filtre->get('campus')->getData();
             $filtre->setCampus($campus);
-            $sorties = $sortieRepository->findByCriteres($filtre, $this->getUser());
+            $sorties = $sortieRepository->findByCriteres($filtre, $this->getUser(), $offset);
+        } else {
+            // Récupérer les sorties
+            $sorties = $sortieRepository->findSorties($this->getUser(), $offset);
         }
+
 
         return $this->render('sortie/liste.html.twig', [
             'sorties' => $sorties,
-            'formulaire_filtres' => $formulaire_filtre->createView()
+            'formulaire_filtres' => $formulaire_filtre->createView(),
+            'previous' => $offset - SortieRepository::SORTIE_PAR_PAGE,
+            'next' => min(count($sorties), $offset + SortieRepository::SORTIE_PAR_PAGE),
         ]);
     }
     #[Route('/sortie/inscrire/{id}', name: 'inscrire', methods: ['GET'])]
@@ -113,7 +120,7 @@ class SortieController extends AbstractController
     public function show(Sortie $sortieParam, SortieRepository $sortieRepository): Response
     {
         $sortie = $sortieRepository->findSortie($sortieParam);
-        if (!$sortie || $sortie->getEtat()->getLibelle()->value == 'Créée' || $sortie->getEtat()->getLibelle()->value == 'Activité passée') {
+        if (!$sortie || !$this->isGranted('view', $sortie)) {
             $this->addFlash('error', 'Accès interdit.');
             return $this->redirectToRoute('sortie_liste');
         }
@@ -134,7 +141,7 @@ class SortieController extends AbstractController
         $sortie = $sortieRepository->find($id);
 
         // Si l'utilisateur n'est pas l'organisateur ou l'administrateur alors rediriger avec un message d'erreur
-        if ($sortie == null || ($sortie->getOrganisateur() != $this->getUser() && !$this->isGranted('ROLE_ADMIN'))) {
+        if (!$this->isGranted('cancel', $sortie) || $sortie == null) {
             $this->addFlash('error', "Accès interdit. Vous n'êtes pas autorisé à annuler cette sortie.");
             return $this->redirectToRoute('sortie_liste');
         }
@@ -177,7 +184,7 @@ class SortieController extends AbstractController
         }
 
         // Vérifier que la sortie à l'état 'Créée' et que l'utilisateur est bien l'organisateur
-        if ($sortie->getEtat()->getLibelle()->value == 'Créée' && $sortie->getOrganisateur() == $this->getUser()) {
+        if ($this->isGranted('manage', $sortie)) {
             $entityManager->remove($sortie);
             $entityManager->flush();
             $this->addFlash('success', 'La sortie a bien été supprimée');
@@ -204,10 +211,7 @@ class SortieController extends AbstractController
             return $this->redirectToRoute('sortie_liste');
         }
 
-        $etatLibelle = $sortie->getEtat()->getLibelle()->value;
-
-        // Si la sortie n'est pas en création ou si l'utilisateur n'est l'organisateur : rediriger avec message d'erreur
-        if ($etatLibelle !== 'Créée' || $sortie->getOrganisateur() !== $this->getUser()) {
+        if (!$this->isGranted('manage', $sortie)) {
             $this->addFlash('error', 'Accès interdit. Vous n\'êtes pas autorisé à publier cette sortie.');
             return $this->redirectToRoute('sortie_liste');
         }
@@ -234,11 +238,11 @@ class SortieController extends AbstractController
     public function creer(Request $request, LieuRepository $lieuRepository, EntityManagerInterface $entityManager, EtatRepository $etatRepository): Response
     {
         $sortie = new Sortie();
-        $lieus = $lieuRepository->findAll();
+        $lieux = $lieuRepository->findAll();
         $user = $this->getUser();
         $sortie->setCampus($this->getUser()->getCampus());
 
-        $creerSortieForm = $this->createForm(CreerSortieType::class, $sortie, ['lieus'=>$lieus]);
+        $creerSortieForm = $this->createForm(CreerSortieType::class, $sortie, ['lieus'=>$lieux]);
         $creerSortieForm->handleRequest($request);
 
         if ($creerSortieForm->isSubmitted() && $creerSortieForm->isValid()) {
@@ -248,11 +252,43 @@ class SortieController extends AbstractController
 
             $entityManager->persist($sortie);
             $entityManager->flush();
+            $this->addFlash('success', 'La sortie a bien été créée!');
             return $this->redirectToRoute('sortie_liste');
         }
 
         return $this->render('sortie/creer.html.twig', [
+            'modeModif'=> false,
             'creerSortieForm' => $creerSortieForm->createView(),
+        ]);
+    }
+
+    #[Route('/sortie/modifier/{id}', name: 'sortie_modifier', methods: ['GET', 'POST'])]
+    public function modifier(Request $request, Sortie $sortie, EntityManagerInterface $entityManager, LieuRepository $lieuRepository) : Response
+    {
+        $lieux = $lieuRepository->findAll();
+        // TODO comparer user avec organisateur
+        $user = $this->getUser();
+
+        $creerSortieForm = $this->createForm(CreerSortieType::class, $sortie, ['lieus'=>$lieux, 'modeModif' => true]);
+        $creerSortieForm->handleRequest($request);
+
+        if ($creerSortieForm->isSubmitted() && $creerSortieForm->isValid()) {
+            $entityManager->flush();
+            return $this->redirectToRoute('sortie_liste');
+        }
+
+        return $this->render('sortie/creer.html.twig', [
+            'modeModif'=> true,
+            'creerSortieForm' => $creerSortieForm->createView(),
+        ]);
+    }
+
+    #[Route('/sortie/lieu', name: 'sortie_lieu', methods: ['POST'])]
+    public function lieu(Request $request, LieuRepository $lieuRepository): Response
+    {
+        $lieu = $lieuRepository->find($request->request->get('id'));
+        return $this->json([
+            'rue' => $lieu ? $lieu->getRue() : null,
         ]);
     }
 }

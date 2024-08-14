@@ -80,6 +80,7 @@ class SortieFiltreType extends AbstractType
     {
         $resolver->setDefaults([
             'data_class' => FiltreSortie::class,
+            'method' => 'GET'
         ]);
     }
 }

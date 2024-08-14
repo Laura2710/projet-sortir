@@ -6,10 +6,9 @@ use App\Entity\Campus;
 use App\Entity\Lieu;
 use App\Entity\Sortie;
 use App\Entity\Ville;
-use Doctrine\ORM\EntityRepository;
-use Doctrine\ORM\QueryBuilder;
 use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Symfony\Component\Form\AbstractType;
+use Symfony\Component\Form\Extension\Core\Type\DateTimeType;
 use Symfony\Component\Form\Extension\Core\Type\DateType;
 use Symfony\Component\Form\Extension\Core\Type\NumberType;
 use Symfony\Component\Form\Extension\Core\Type\TextareaType;
@@ -29,7 +28,7 @@ class CreerSortieType extends AbstractType
                 'label' => 'Nom de la sortie',
                 'empty_data' => '',
             ])
-            ->add('dateHeureDebut', DateType::class, [
+            ->add('dateHeureDebut', DateTimeType::class, [
                 'label' => 'Date et heure de la sortie',
                 'widget' => 'single_text',
                 'empty_data' => ' ',
@@ -63,10 +62,12 @@ class CreerSortieType extends AbstractType
                 'mapped' => false,
                 'placeholder' => 'Choisissez une ville',
                 'attr' => ['class' => 'ville-select'],
+                'disabled' => $options['modeModif'],
             ])
             ->add('lieu', EntityType::class, [
                 'class' => Lieu::class,
                 'choice_label' => 'nom',
+                'mapped' => true,
                 'placeholder' => 'Choisissez un lieu',
                 'attr' => ['class' => 'lieu-select'],
             ])
@@ -87,24 +88,81 @@ class CreerSortieType extends AbstractType
                 'mapped' => false,
             ]);
 
-        $formModifier = function(FormInterface $form, Ville $ville = null){
+        $formModifierVille = function(FormInterface $form, Ville $ville = null){
             $lieu = (null === $ville) ? [] : $ville->getLieus();
+            $codePostal = $ville ? $ville->getCodePostal() : '';
+
             $form->add('lieu', EntityType::class, [
                 'class' => Lieu::class,
                 'choices' => $lieu,
                 'choice_label' => 'nom',
                 'placeholder' => 'Choisissez un lieu',
                 'label' => 'Lieu',
+                'mapped' => true
+            ]);
+
+            $form->add('codePostal', TextType::class, [
+                'disabled' => true,
+                'mapped' => false,
+                'data' => $codePostal,
             ]);
         };
 
-        $builder->get('ville')->AddEventListener(
+        // Populer ville et rue en mode Modif
+        $builder->addEventListener(FormEvents::PRE_SET_DATA, function (FormEvent $event) use ($formModifierVille) {
+        $form = $event->getForm();
+        $sortie = $event->getData();
+
+        if ($sortie && $sortie->getLieu()) {
+            $ville = $sortie->getLieu()->getVille();
+            $form->get('ville')->setData($ville);
+
+            $form->add('ville', EntityType::class, [
+                'class' => Ville::class,
+                'choice_label' => 'nom',
+                'data' => $ville,
+                'mapped' => false,
+                'disabled' => true,
+            ]);
+            $formModifierVille($form, $ville);
+            $rue = $sortie->getLieu()->getRue();
+            $form->add('rue', TextType::class, [
+                'mapped' => false,
+                'data' => $rue,
+                'disabled' => true,
+            ]);
+        }
+    });
+
+        $builder->get('ville')->addEventListener(
             FormEvents::POST_SUBMIT,
-            function (FormEvent $event) use ($formModifier){
+            function (FormEvent $event) use ($formModifierVille){
                 $ville = $event->getForm()->getData();
-                $formModifier($event->getForm()->getParent(), $ville);
+                $formModifierVille($event->getForm()->getParent(), $ville);
             }
         );
+
+
+
+        //
+       /* $formModifierLieu = function (FormInterface $form, Lieu $lieu = null) {
+            $rue = $lieu ? $lieu->getRue() : '';
+
+            $form->add('rue', TextType::class, [
+                'disabled' => true,
+                'mapped' => false,
+                'data' => $rue,
+            ]);
+        };
+
+        $builder->get('lieu')->addEventListener(
+            FormEvents::POST_SUBMIT,
+            function (FormEvent $event) use ($formModifierLieu) {
+                $lieu = $event->getForm()->getData();dump($lieu);
+                $formModifierLieu($event->getForm()->getParent(), $lieu);
+            }
+        );*/
+        //
     }
 
     public function configureOptions(OptionsResolver $resolver): void
@@ -112,6 +170,7 @@ class CreerSortieType extends AbstractType
         $resolver->setDefaults([
             'data_class' => Sortie::class,
             'lieus' => null,
+            'modeModif' => false,
         ]);
     }
 }

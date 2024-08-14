@@ -53,10 +53,17 @@
         </div>
     </div>
 {% endif %}
-<div class="container">
-    {% block body %}{% endblock %}
-</div>
-<footer></footer>
+<main>
+    <div class="container">
+        {% block body %}{% endblock %}
+    </div>
+</main>
+
+<footer>
+    <div class="container">
+        <p>&copy; {{ "now"|date("Y") }} Sortir.com - Réalisé par Anthony, Chloé, Axel et Laura</p>
+    </div>
+</footer>
 {% block js %}{% endblock %}
 </body>
 </html>
