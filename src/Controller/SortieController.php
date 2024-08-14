@@ -17,9 +17,16 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use MobileDetectBundle\DeviceDetector\MobileDetectorInterface;
 
 class SortieController extends AbstractController
 {
+    private $mobileDetector;
+
+    public function __construct(MobileDetectorInterface $mobileDetector)
+    {
+        $this->mobileDetector = $mobileDetector;
+    }
     #[Route('/', name: 'sortie_liste', methods: ['GET', 'POST'])]
     public function liste(Request $request, SortieRepository $sortieRepository, MajEtatSortie $majEtatSortie): Response
     {
@@ -35,9 +42,14 @@ class SortieController extends AbstractController
             ? $sortieRepository->findByCriteres($filtre, $this->getUser())
             : $sortieRepository->findSorties($this->getUser());
 
-        return $this->render('sortie/liste.html.twig', [
+        $twig = 'sortie/liste.html.twig';
+        if ($this->mobileDetector->isMobile() && !$this->mobileDetector->isTablet()) {
+            $twig = 'inc/liste_sortiesmobile.html.twig';
+        }
+
+        return $this->render($twig, [
             'sorties' => $sorties,
-            'formulaire_filtres' => $formulaire_filtre->createView()
+            'formulaire_filtres' => $formulaire_filtre
         ]);
     }
     #[Route('/sortie/inscrire/{id}', name: 'inscrire', methods: ['GET'])]
@@ -73,7 +85,6 @@ class SortieController extends AbstractController
     }
 
 
-
     #[Route('/sortie/se-desister/{id}', name: 'se_desister',requirements: ['id'=>'\d+'], methods: ['GET'])]
     public function seDesister(Sortie $sortie, EntityManagerInterface $entityManager, EtatRepository $etatRepository): Response
     {
@@ -105,7 +116,12 @@ class SortieController extends AbstractController
             $this->addFlash('error', 'Accès interdit.');
             return $this->redirectToRoute('sortie_liste');
         }
-        return $this->render('sortie/detail.html.twig', [
+        $twig = 'detail.html.twig';
+        if ($this->mobileDetector->isMobile() && !$this->mobileDetector->isTablet()) {
+            $twig = 'sortie/detail_mobile.html.twig';
+        }
+
+        return $this->render ($twig,[
             'sortie' => $sortie,
         ]);
     }
@@ -239,5 +255,6 @@ class SortieController extends AbstractController
             'creerSortieForm' => $creerSortieForm->createView(),
         ]);
     }
+
 }
 

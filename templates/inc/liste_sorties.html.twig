@@ -21,7 +21,7 @@
                     <a href="{{ path('sortie_supprimer', {'id':sortie.id}) }}">Supprimer</a>
                 {% endif %}
 
-                {% if sortie.etat.libelle.value == 'Cloturee' and sortie.dateHeureDebut < 'now' and sortie.participants.contains(app.user) %}
+                {% if sortie.etat.libelle.value == 'Cloturee' and sortie.dateLimiteInscription > 'now' and sortie.participants.contains(app.user) %}
                     <a href="{{ path('se_desister', {'id': sortie.id}) }}">Se desister</a>
                 {% endif %}
 
