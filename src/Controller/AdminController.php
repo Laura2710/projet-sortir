@@ -18,6 +18,8 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Security\Csrf\CsrfToken;
+use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
 use Symfony\Component\Validator\Constraints\File;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
@@ -62,7 +64,7 @@ class AdminController extends AbstractController
                             $participant = $this->getParticipant($record, $passwordHasher, $campus);
                             $violations = $validator->validate($participant);
                             if (count($violations) > 0) {
-                                $this->addFlash('error', "Le participant ".$participant->getPseudo()." n'est pas valide");
+                                $this->addFlash('error', "Le participant " . $participant->getPseudo() . " n'est pas valide");
                                 return $this->redirectToRoute('admin_utilisateurs_upload');
                             }
                             $entityManager->persist($participant);
@@ -115,44 +117,57 @@ class AdminController extends AbstractController
     }
 
     #[Route('/utilisateur/activer/{id}', name: 'utilisateur_activer', requirements: ['id' => '\d+'], methods: ['GET'])]
-    public function desactiverUtilisateur(int $id, EntityManagerInterface $entityManager): Response
+    public function desactiverUtilisateur(int $id, EntityManagerInterface $entityManager, ParticipantRepository $participantRepository, Request $request, CsrfTokenManagerInterface $csrfTokenManager): Response
     {
-        $participant = $entityManager->find(Participant::class, $id);
-        if (!$participant) {
-            $this->addFlash('error', "L'utilisateur n'existe pas.");
-            return $this->redirectToRoute('admin_utilisateurs');
+        $token = $request->query->get('_token');
+
+        if ($csrfTokenManager->isTokenValid(new CsrfToken('activer-' . $id, $token))) {
+            $participant = $participantRepository->find($id);
+            if (!$participant) {
+                $this->addFlash('error', "L'utilisateur n'existe pas.");
+                return $this->redirectToRoute('admin_utilisateurs');
+            }
+            if ($participant->isAdministrateur()) {
+                $this->addFlash('error', "Action interdite");
+                return $this->redirectToRoute('admin_utilisateurs');
+            }
+
+            $participant->setActif(!$participant->isActif());
+            $entityManager->flush();
+
+            $action = $participant->isActif() ? 'activé' : 'désactivé';
+            $message = sprintf('Le compte de %s a été %s avec succès.', $participant->getPseudo(), $action);
+            $this->addFlash('success', $message);
+
+        } else {
+            $this->addFlash('error', "Token CSRF invalide.");
         }
-        if ($participant->isAdministrateur()) {
-            $this->addFlash('error', "Action interdite");
-            return $this->redirectToRoute('admin_utilisateurs');
-        }
-
-        $participant->setActif(!$participant->isActif());
-        $entityManager->flush();
-
-
-        $action = $participant->isActif() ? 'activé' : 'désactivé';
-        $message = sprintf('Le compte de %s a été %s avec succès.', $participant->getPseudo(), $action);
-        $this->addFlash('success', $message);
 
         return $this->redirectToRoute('admin_utilisateurs');
     }
 
     #[Route('/utilisateur/supprimer/{id}', name: 'utilisateur_supprimer', requirements: ['id' => '\d+'], methods: ['GET'])]
-    public function supprimerUtilisateur(int $id, EntityManagerInterface $entityManager): Response
+    public function supprimerUtilisateur(int $id, EntityManagerInterface $entityManager, Request $request, CsrfTokenManagerInterface $csrfTokenManager, ParticipantRepository $participantRepository): Response
     {
-        $participant = $entityManager->find(Participant::class, $id);
-        if (!$participant) {
-            $this->addFlash('error', "L'utilisateur n'existe pas.");
-            return $this->redirectToRoute('admin_utilisateurs');
+        $token = $request->query->get('_token');
+
+        if ($csrfTokenManager->isTokenValid(new CsrfToken('supprimer-' . $id, $token))) {
+            $participant = $participantRepository->find($id);
+            if (!$participant) {
+                $this->addFlash('error', "L'utilisateur n'existe pas.");
+                return $this->redirectToRoute('admin_utilisateurs');
+            }
+            if ($participant->isAdministrateur()) {
+                $this->addFlash('error', "Action interdite");
+                return $this->redirectToRoute('admin_utilisateurs');
+            }
+            $entityManager->remove($participant);
+            $entityManager->flush();
+            $this->addFlash('success', "L'utilisateur a été supprimé!");
+        } else {
+            $this->addFlash('error', "Token CSRF invalide.");
         }
-        if ($participant->isAdministrateur()) {
-            $this->addFlash('error', "Action interdite");
-            return $this->redirectToRoute('admin_utilisateurs');
-        }
-        $entityManager->remove($participant);
-        $entityManager->flush();
-        $this->addFlash('success', "L'utilisateur a été supprimé!");
+
         return $this->redirectToRoute('admin_utilisateurs');
     }
 
