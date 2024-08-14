@@ -36,6 +36,13 @@
 
         <button>Enregistrer</button>
         <button>Publier la sortie</button>
+        {% if modeModif %}
+            <button>
+                <a href="{{ path('sortie_supprimer', {id: sortie.id}) }}">
+                    Supprimer la sortie
+                </a>
+            </button>
+        {% endif %}
         <button><a href="{{ path('sortie_liste') }}">Annuler</a></button>
 
         {{ form_end(creerSortieForm) }}

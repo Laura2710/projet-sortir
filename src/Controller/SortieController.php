@@ -266,8 +266,10 @@ class SortieController extends AbstractController
     public function modifier(Request $request, Sortie $sortie, EntityManagerInterface $entityManager, LieuRepository $lieuRepository) : Response
     {
         $lieux = $lieuRepository->findAll();
-        // TODO comparer user avec organisateur
-        $user = $this->getUser();
+        if (!$this->isGranted('manage', $sortie) || $sortie == null) {
+            $this->addFlash('error', "Vous n'êtes pas autorisé à accéder à cette page");
+            return $this->redirectToRoute('sortie_liste');
+        }
 
         $creerSortieForm = $this->createForm(CreerSortieType::class, $sortie, ['lieus'=>$lieux, 'modeModif' => true]);
         $creerSortieForm->handleRequest($request);
@@ -280,6 +282,7 @@ class SortieController extends AbstractController
         return $this->render('sortie/creer.html.twig', [
             'modeModif'=> true,
             'creerSortieForm' => $creerSortieForm->createView(),
+            'sortie' => $sortie,
         ]);
     }
 
