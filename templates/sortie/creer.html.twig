@@ -8,14 +8,98 @@
     <div>
         {{ form_start(creerSortieForm) }}
 
-        {{ form_widget(creerSortieForm) }}
+        {{ form_row(creerSortieForm.nom) }}
+
+        {{ form_row(creerSortieForm.dateHeureDebut) }}
+
+        {{ form_row(creerSortieForm.dateLimiteInscription) }}
+
+        {{ form_row(creerSortieForm.duree) }}
+
+        {{ form_row(creerSortieForm.nbInscriptionsMax) }}
+
+        {{ form_row(creerSortieForm.infosSortie) }}
+
+        {{ form_row(creerSortieForm.campus) }}
+
+        {{ form_row(creerSortieForm.ville) }}
+
+        {{ form_row(creerSortieForm.lieu) }}
+
+        {{ form_row(creerSortieForm.rue) }}
+
+        {{ form_row(creerSortieForm.codePostal) }}
+
+        {{ form_row(creerSortieForm.latitude) }}
+
+        {{ form_row(creerSortieForm.longitude) }}
 
         <button>Enregistrer</button>
         <button>Publier la sortie</button>
-        <button>Annuler</button>
+        {% if modeModif %}
+            <button>
+                <a href="{{ path('sortie_supprimer', {id: sortie.id}) }}">
+                    Supprimer la sortie
+                </a>
+            </button>
+        {% endif %}
+        <button><a href="{{ path('sortie_liste') }}">Annuler</a></button>
 
         {{ form_end(creerSortieForm) }}
     </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            let ville = document.querySelector("#creer_sortie_ville");
+            ville.addEventListener("change", function () {
+                let form = this.closest("form");
+                let formData = new FormData(form);
+
+                fetch(form.action, {
+                    method: form.getAttribute("method"),
+                    body: formData,
+                })
+
+                    .then(response => response.text())
+                    .then(html => {
+                        let content = document.createElement("html");
+                        content.innerHTML = html;
+
+                        let nouveauSelect = content.querySelector("#creer_sortie_lieu");
+                        document.querySelector("#creer_sortie_lieu").replaceWith(nouveauSelect);
+
+                        let nouveauCodePostal = content.querySelector("#creer_sortie_codePostal");
+                        document.querySelector("#creer_sortie_codePostal").value = nouveauCodePostal.value;
+
+                        //
+                        let lieu = document.querySelector("#creer_sortie_lieu");
+                        lieu.addEventListener("change", function (e) {
+                            let selectedLieu = e.target.value;
+                            let formData = new FormData();
+                            formData.append('id', selectedLieu);
+                            fetch('/projet-sortir/public/sortie/lieu', {
+                                method: form.getAttribute("method"),
+                                body: formData,
+                            })
+                                .then(response => response.json())
+                                .then(data => {
+                                    if (data.rue) {
+                                        document.querySelector("#creer_sortie_rue").value = data.rue;
+                                    } else {
+                                        console.error("Rue non trouvée pour ce lieu.");
+                                    }
+                                })
+                                .catch(error => console.error("Erreur lors de la requête:", error));
+                        });
+
+                        //
+                    });
+            });
+
+        })
+    </script>
+
+
 
 {% endblock %}
 

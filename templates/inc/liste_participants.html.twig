@@ -1,0 +1,22 @@
+<table class="table-participants">
+    <thead>
+    <tr>
+        <th>Pseudo</th>
+        <th>Nom</th>
+    </tr>
+    </thead>
+    <tbody>
+    {% if sortie.participants is not empty %}
+        {% for participant in sortie.participants %}
+            <tr>
+                <td><a href="{{ path('participant_details', {'id':participant.id}) }}">{{ participant.pseudo }}</a></td>
+                <td>{{ participant.prenom }} {{ participant.nom }}</td>
+            </tr>
+        {% endfor %}
+    {% else %}
+        <tr>
+            <td colspan="2">Aucun participant</td>
+        </tr>
+    {% endif %}
+    </tbody>
+</table>

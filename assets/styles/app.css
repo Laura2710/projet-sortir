@@ -81,6 +81,11 @@ button {
     transition: all .24s ease-in;
 }
 
+button a {
+    color: #222222;
+    text-decoration: none;
+}
+
 .btn {
     margin-top: 1em;
     padding: 8px 16px;
@@ -99,6 +104,7 @@ button {
 .btn-primaire {
     background: hsl(340 100% 60% / 1);
     color: white;
+    cursor: pointer;
 }
 
 .btn-primaire:hover {
@@ -113,6 +119,15 @@ button {
 .btn-secondaire:hover {
     background: hsl(340 100% 60% / 1);
     color: white;
+    cursor: pointer;
+}
+
+.zoom {
+    transition: transform .2s;
+}
+
+.zoom:hover {
+    transform: scale(1.2);
 }
 
 table, th, td {
@@ -123,12 +138,17 @@ table, th, td {
 }
 
 .liste-sorties {
-    margin: 5em 0;
+    margin: 5em 0 1em;
 }
 
 form ul li {
     list-style: none;
     color: red;
+}
+
+.btn-creer {
+    display:flex;
+    justify-content: center;
 }
 
 
@@ -149,8 +169,17 @@ form ul li {
     gap: 1em;
 }
 
-.detail-sortie div {
-    max-width: 50%;
+.detail-sortie {
+    width: fit-content;
+    margin: 0 auto;
+}
+
+.detail-sortie .description {
+    max-width: 400px;
+}
+.detail-sortie #map {
+    width: 300px;
+    height: 300px;
 }
 
 .detail-sortie p {
@@ -177,7 +206,7 @@ h1 {
     background-color: lightpink;
 }
 
-.etat-sortie.annulee {
+.etat-sortie.annulee, .etat-sortie.terminee, .etat-sortie.passee {
     background-color: lightgray;
 }
 
@@ -185,7 +214,14 @@ h1 {
     width: fit-content;
 }
 
-.detail-sortie span {
+.details-participant {
+    padding-top: 2em;
+}
+
+.details-participant span {
+    font-weight: bold;
+}
+.detail-sortie .bold {
     font-weight: bold;
 }
 .flash-message {
@@ -218,4 +254,51 @@ h1 {
 }
 .checkbox label {
     display: inline-block;
+}
+
+main {
+    min-height: 70vh;
+}
+
+footer {
+    margin-top: 3em;
+    background-color: #f2f2f2;
+    padding: 1em;
+}
+
+footer p {
+    text-align: center;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+.pagination p {
+    text-align: right;
+}
+
+.pagination a {
+    display: block;
+    text-align: center;
+}
+
+.pagination .flex {
+    justify-content: center;
+}
+.avatar {
+    margin-top: 50px;
+    border-radius: 15px;
+    border: 3px solid black;
+    height: 200px;
+    width: 300px;
+    object-fit: cover;
+}
+
+.participant-profil {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+}
+.grid-2-3 {
+    grid-column: 2 / 3;
 }

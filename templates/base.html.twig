@@ -30,8 +30,8 @@
                 <a href="{{ path('admin_utilisateurs') }}">Utilisateurs</a>
             {% endif %}
             <a href="{{ path('sortie_liste') }}">Accueil</a>
-            <a href="">Mon profil</a>
-            <a href="{{  path('app_logout') }}">Se déconnecter</a>
+            <a href="{{ path('participant_details', {'id':app.user.id}) }}">Mon profil</a>
+            <a href="{{ path('app_logout') }}">Se déconnecter</a>
         </nav>
         {% endif %}
     </div>
@@ -53,9 +53,17 @@
         </div>
     </div>
 {% endif %}
-<div class="container">
-    {% block body %}{% endblock %}
-</div>
-<footer></footer>
+<main>
+    <div class="container">
+        {% block body %}{% endblock %}
+    </div>
+</main>
+
+<footer>
+    <div class="container">
+        <p>&copy; {{ "now"|date("Y") }} Sortir.com - Réalisé par Anthony, Chloé, Axel et Laura</p>
+    </div>
+</footer>
+{% block js %}{% endblock %}
 </body>
 </html>

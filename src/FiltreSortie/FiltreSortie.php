@@ -7,7 +7,7 @@ use Symfony\Component\Validator\Constraints as Assert;
 
 class FiltreSortie
 {
-    #[Assert\NotNull(message: "Le campus est obligatoire")]
+
     private ?Campus $campus = null;
     #[Assert\Regex(pattern: '/^[A-zÀ-ú]+$/', message: 'Le nom de la sortie comporte des caractères interdits')]
     private ?string $nomSortie = null;

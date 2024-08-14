@@ -1,5 +1,4 @@
 import './bootstrap.js';
-import './js/AjaxRequest.js';
 /*
  * Welcome to your app's main JavaScript file!
  *
@@ -9,4 +8,10 @@ import './js/AjaxRequest.js';
 import './styles/app.css';
 import './styles/mobile.css';
 import './styles/det.css';
+import {AjaxRequest} from "./js/AjaxRequest.js";
+
+if (window.location.pathname.includes('sortie/detail')) {
+    AjaxRequest.getLieu();
+}
+
 console.log('This log comes from assets/app.js - welcome to AssetMapper! 🎉');

@@ -32,13 +32,13 @@
                         {% endif %}
                     {% endfor %}
                 </td>
-                <td>{% if p.isActif %}Actif{% else %}Inactif{% endif %}</td>
+                <td>{% if p.actif %}Actif{% else %}Inactif{% endif %}</td>
                 <td>
                     <div class="flex-actions">
-                          <a href="{{ path('admin_utilisateur_activer', {'id':p.id}) }}">
-                                {% if p.isActif %}Désactiver{% else %}Activer{% endif %}
+                          <a href="{{ path('admin_utilisateur_activer', {'id':p.id, '_token': csrf_token('activer-'~p.id)}) }}">
+                                {% if p.actif %}Désactiver{% else %}Activer{% endif %}
                           </a>
-                        <a href="{{ path('admin_utilisateur_supprimer', {'id':p.id}) }}">Supprimer</a>
+                        <a href="{{ path('admin_utilisateur_supprimer', {'id':p.id, '_token': csrf_token('supprimer-'~p.id)}) }}">Supprimer</a>
                     </div>
                 </td>
             </tr>

@@ -1,0 +1,51 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Profils{% endblock %}
+
+{% block body %}
+    {% for label, messages in app.flashes %}
+        {% for message in messages %}
+            <div class="alert-{{  label }}"  >
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endfor %}
+
+        <div class="participant-profil">
+    {% if (participant.avatar) %}
+        <img class="avatar" alt="Avatar" src="{{ asset('images/' ~ participant.avatar) }}">
+    {% endif %}
+    {% if app.user == participant %}
+        <div class="centrer grid-2-3">
+<h2 class="centrer" >Mon profil</h2>
+    {{ form_start(participantForm) }}
+    {{ form_widget(participantForm) }}
+                <button class="btn btn-primaire zoom" >Mettre à jour !</button>
+                <a class="btn btn-secondaire" onclick="history.back()" >Annuler</a>
+    {{ form_end(participantForm) }}
+        </div>
+    {% else %}
+        <div class="centrer grid-2-3" >
+        <h2 class="centrer">{{ participant.pseudo }}</h2>
+            <div class="flex centrer details-participant">
+        <div>
+            <p><span>Prénom :</span></p>
+            <p><span>Nom :</span></p>
+            <p><span>Téléphone :</span></p>
+            <p><span>Email :</span></p>
+            <p><span>Campus :</span></p>
+        </div>
+        <div>
+            <p>{{ participant.prenom }}</p>
+            <p>{{ participant.nom }}</p>
+            <p>{{ participant.telephone }}</p>
+            <p>{{ participant.mail }}</p>
+            <p>{{ participant.campus.nom }}</p>
+        </div>
+            </div>
+            <a class="btn btn-secondaire" onclick="history.back()" >Retour</a>
+        </div>
+
+    {% endif %}
+        </div>
+{% endblock %}
