@@ -245,3 +245,19 @@ h1 {
 .checkbox label {
     display: inline-block;
 }
+.avatar {
+    margin-top: 50px;
+    border-radius: 15px;
+    border: 3px solid black;
+    height: 200px;
+    width: 300px;
+    object-fit: cover;
+}
+
+.participant-profil {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+}
+.grid-2-3 {
+    grid-column: 2 / 3;
+}
