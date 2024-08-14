@@ -13,7 +13,7 @@
 
         <div class="participant-profil">
     {% if (participant.avatar) %}
-        <img class="avatar" src="{{ asset('images/' ~ participant.avatar) }}">
+        <img class="avatar" alt="Avatar" src="{{ asset('images/' ~ participant.avatar) }}">
     {% endif %}
     {% if app.user == participant %}
         <div class="centrer grid-2-3">
