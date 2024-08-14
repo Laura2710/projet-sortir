@@ -12,6 +12,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Core\User\UserInterface;
+use Symfony\Component\String\Slugger\SluggerInterface;
 
 class ParticipantController extends AbstractController
 {
@@ -20,7 +21,8 @@ class ParticipantController extends AbstractController
                          Request $request,
                          ParticipantRepository $participantRepository,
                          EntityManagerInterface $entityManager,
-                        UserPasswordHasherinterface $userPasswordHasher): Response
+                        UserPasswordHasherinterface $userPasswordHasher,
+                        SluggerInterface $slugger): Response
     {
         $participant = $participantRepository->findParticipantById($participantId);
         if ($this->getUser() === $participant ){
@@ -28,6 +30,17 @@ class ParticipantController extends AbstractController
             $participantForm->handleRequest($request);
 
             if ($participantForm->isSubmitted() && $participantForm->isValid()) {
+
+                $avatar = $participantForm->get('avatar')->getData();
+                if ($avatar) {
+                    $originalFilename = pathinfo($avatar->getClientOriginalName(), PATHINFO_FILENAME);
+                    $safeFilename = $slugger->slug($originalFilename);
+                    $newFilename = $safeFilename.'-'.uniqid().'.'.$avatar->guessExtension();
+
+                    $avatar->move($this->getParameter('upload_champ_entite_dir'), $newFilename);
+                    $participant->setAvatar($newFilename);
+                }
+
                 if ($participantForm->get('motDePasse')->getData()) {
                     $participant->setMotPasse(
                         $userPasswordHasher->hashPassword(
@@ -36,13 +49,11 @@ class ParticipantController extends AbstractController
                         )
                     );
                 };
+
                 $entityManager->persist($participant);;
                 $entityManager->flush();
                 $this->addFlash('success', 'Profil mis à jour !');
-//                return $this->render('participant/details.html.twig', [
-//                    'participant' => $participant,
-//                    'participantForm' => $participantForm->createView()
-//                ]);
+
             }
             $entityManager->refresh($this->getUser());
             return $this->render('participant/details.html.twig', [

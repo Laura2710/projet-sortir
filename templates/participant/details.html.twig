@@ -10,21 +10,24 @@
             </div>
         {% endfor %}
     {% endfor %}
+
+        <div class="participant-profil">
+    {% if (participant.avatar) %}
+        <img class="avatar" alt="Avatar" src="{{ asset('images/' ~ participant.avatar) }}">
+    {% endif %}
     {% if app.user == participant %}
-        <div class="centrer">
-<h2>Mon profil</h2>
+        <div class="centrer grid-2-3">
+<h2 class="centrer" >Mon profil</h2>
     {{ form_start(participantForm) }}
     {{ form_widget(participantForm) }}
-            <div class="centrer">
                 <button class="btn btn-primaire zoom" >Mettre à jour !</button>
                 <a class="btn btn-secondaire" onclick="history.back()" >Annuler</a>
-            </div>
     {{ form_end(participantForm) }}
         </div>
     {% else %}
-        <div class="centrer">
+        <div class="centrer grid-2-3" >
         <h2 class="centrer">{{ participant.pseudo }}</h2>
-        <div class="flex centrer details-participant"  >
+            <div class="flex centrer details-participant">
         <div>
             <p><span>Prénom :</span></p>
             <p><span>Nom :</span></p>
@@ -39,11 +42,10 @@
             <p>{{ participant.mail }}</p>
             <p>{{ participant.campus.nom }}</p>
         </div>
-        </div>
+            </div>
             <a class="btn btn-secondaire" onclick="history.back()" >Retour</a>
         </div>
 
-
-
     {% endif %}
+        </div>
 {% endblock %}
