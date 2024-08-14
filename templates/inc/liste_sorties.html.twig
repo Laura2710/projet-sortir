@@ -16,7 +16,7 @@
                 {% endif %}
 
                 {% if is_granted("manage", sortie) %}
-                    <a href="">Modifier</a>
+                    <a href="{{ path('sortie_modifier', {'id':sortie.id}) }}">Modifier</a>
                     <a href="{{ path('sortie_publier', {'id':sortie.id}) }}">Publier</a>
                     <a href="{{ path('sortie_supprimer', {'id':sortie.id}) }}">Supprimer</a>
                 {% endif %}

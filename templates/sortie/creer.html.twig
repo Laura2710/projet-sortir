@@ -1,52 +1,68 @@
 {% extends 'base.html.twig' %}
 
 {% block title %}
-
+    <h1>Créer une sortie</h1>
 {% endblock %}
 
 {% block body %}
-    <div>
+
+    <h1>Créer une sortie</h1>
+
+<div class="creer-sortie">
+    <div class="flex">
         {{ form_start(creerSortieForm) }}
 
-        {{ form_row(creerSortieForm.nom) }}
+        <div class="form-column">
+            {{ form_row(creerSortieForm.nom) }}
 
-        {{ form_row(creerSortieForm.dateHeureDebut) }}
+            {{ form_row(creerSortieForm.dateHeureDebut) }}
 
-        {{ form_row(creerSortieForm.dateLimiteInscription) }}
+            {{ form_row(creerSortieForm.dateLimiteInscription) }}
 
-        {{ form_row(creerSortieForm.duree) }}
+            {{ form_row(creerSortieForm.duree) }}
 
-        {{ form_row(creerSortieForm.nbInscriptionsMax) }}
+            {{ form_row(creerSortieForm.nbInscriptionsMax) }}
 
-        {{ form_row(creerSortieForm.infosSortie) }}
+            {{ form_row(creerSortieForm.infosSortie) }}
+        </div>
 
-        {{ form_row(creerSortieForm.campus) }}
+        <div class="form-column">
+            {{ form_row(creerSortieForm.campus) }}
 
-        {{ form_row(creerSortieForm.ville) }}
+            {{ form_row(creerSortieForm.ville) }}
 
-        {{ form_row(creerSortieForm.lieu) }}
+            {{ form_row(creerSortieForm.lieu) }}
 
-        {{ form_row(creerSortieForm.rue) }}
+            {{ form_row(creerSortieForm.rue) }}
 
-        {{ form_row(creerSortieForm.codePostal) }}
+            {{ form_row(creerSortieForm.codePostal) }}
 
-        {{ form_row(creerSortieForm.latitude) }}
+            {{ form_row(creerSortieForm.latitude) }}
 
-        {{ form_row(creerSortieForm.longitude) }}
+            {{ form_row(creerSortieForm.longitude) }}
+        </div>
+    </div>
+</div>
 
-        <button>Enregistrer</button>
-        <button>Publier la sortie</button>
+<div class="form-buttons">
+    <div class="btn-group">
+        <button class="btn btn-secondaire" type="submit" name="valider" value="enregistrer">Enregistrer</button>
+        <button class="btn btn-secondaire" type="submit" name="valider" value="publier">Publier la sortie</button>
+    </div>
+    <div class="btn-group">
         {% if modeModif %}
-            <button>
-                <a href="{{ path('sortie_supprimer', {id: sortie.id}) }}">
-                    Supprimer la sortie
-                </a>
-            </button>
+            <a class="btn btn-secondaire" href="{{ path('sortie_supprimer', {id: sortie.id}) }}">
+                Supprimer la sortie
+            </a>
         {% endif %}
-        <button><a href="{{ path('sortie_liste') }}">Annuler</a></button>
+        <a class="btn btn-secondaire" href="{{ path('sortie_liste') }}">Annuler</a>
+    </div>
+</div>
 
         {{ form_end(creerSortieForm) }}
-    </div>
+
+
+
 
     <script>
         document.addEventListener("DOMContentLoaded", () => {
@@ -100,6 +116,5 @@
     </script>
 
 
-
-{% endblock %}
+    {% endblock %}
 
