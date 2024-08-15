@@ -32,7 +32,7 @@ class SortieController extends AbstractController
     public function liste(Request $request, SortieRepository $sortieRepository, MajEtatSortie $majEtatSortie): Response
     {
         // Mise à jour de l'état des sortie
-        $majEtatSortie->mettreAjourEtatSortie();
+       $majEtatSortie->mettreAjourEtatSortie();
 
         $filtre = new FiltreSortie();
         $formulaire_filtre = $this->createForm(SortieFiltreType::class, $filtre);
@@ -255,12 +255,25 @@ class SortieController extends AbstractController
 
         if ($creerSortieForm->isSubmitted() && $creerSortieForm->isValid()) {
             $sortie->setOrganisateur($user);
-            $etat = $etatRepository->findOneBy(['libelle'=>EtatEnum::Creee]);
-            $sortie->setEtat($etat);
+            $action = $request->request->get('valider');
 
+            if($action == 'enregistrer'){
+                $etat = $etatRepository->findOneBy(['libelle'=>EtatEnum::Creee]);
+            } else {
+                $etat = $etatRepository->findOneBy(['libelle'=>EtatEnum::Ouverte]);
+
+            }
+
+            $sortie->setEtat($etat);
             $entityManager->persist($sortie);
             $entityManager->flush();
-            $this->addFlash('success', 'La sortie a bien été créée!');
+
+            if($action == 'enregistrer'){
+                $this->addFlash('success', 'La sortie a bien été créée!');
+            } else {
+                $this->addFlash('success', 'La sortie a bien été publiée!');
+            }
+
             return $this->redirectToRoute('sortie_liste');
         }
 
