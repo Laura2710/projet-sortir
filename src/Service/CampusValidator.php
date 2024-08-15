@@ -18,7 +18,7 @@ class CampusValidator
             return false;
         }
 
-        if (!preg_match('/^[A-zÀ-ú-\']+$/', $nomCampus)) {
+        if (!preg_match('/^[A-Za-zÀ-ú\s]+$/', $nomCampus)) {
             return false;
         }
         return true;

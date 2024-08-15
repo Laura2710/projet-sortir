@@ -7,7 +7,15 @@ export class HttpRequest {
             },
             body: JSON.stringify(data),
         })
-            .then(res => res.json());
+            .then(res => {
+                // Vérification du type de contenu avant d'essayer de parser en JSON
+                const contentType = res.headers.get('Content-Type');
+                if (contentType && contentType.includes('application/json')) {
+                    return res.json();
+                } else {
+                    throw new Error("La réponse n'est pas au format JSON");
+                }
+            });
     }
 
     static get(url) {
