@@ -1,15 +1,13 @@
-'use strict';
+import {HttpRequest} from "./HttpRequest.js";
 
-export class AjaxRequest {
-    constructor() {}
+export default class LieuMap {
     static getLieu() {
         let latitude = document.getElementById('latitude').innerText;
         let longitude = document.getElementById('longitude').innerText;
 
         if (latitude !== 'non renseignée' && longitude !== 'non renseignée') {
             let api = "https://api-adresse.data.gouv.fr/reverse/?lon="+longitude+"&lat="+latitude;
-            fetch(api)
-                .then(res => res.json())
+            HttpRequest.get(api)
                 .then(data => {
                     let gps = document.getElementById('gps');
                     let mapLeaflet = document.createElement('div');

@@ -338,3 +338,35 @@ a:hover {
 .btn-creer a {
     text-decoration: none;
 }
+
+.table-campus button {
+    margin: 0;
+    min-width: fit-content;
+    font-size: 1em;
+    background: none;
+    border: none;
+    min-height: fit-content;
+    cursor: pointer;
+}
+.table-campus a {
+    text-decoration: none;
+}
+.table-campus button:hover, .table-campus a:hover {
+    color: hsl(340 100% 60% / 1);
+
+}
+
+.table-campus {
+    width: auto;
+    margin: 0 auto;
+}
+
+.table-campus input {
+    margin: 0;
+}
+
+.error {
+    text-align: center;
+    color: red;
+    margin: 8px auto 0;
+}

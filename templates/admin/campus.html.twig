@@ -1,0 +1,35 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+    <h1>Gérer les campus</h1>
+    <table class="table-campus">
+        <thead>
+            <tr>
+                <th>Campus</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for c in campus %}
+            <tr>
+                <td contenteditable="true" class="nom-campus" data-id="{{ c.id }}">{{ c.nom }}</td>
+                <td>
+                    <div class="flex-actions">
+                        <button class="btn-edit-campus" data-id="{{ c.id }}">Modifier</button>
+                        <a href="{{ path('admin_campus_supprimer', {'id':c.id}) }}">Supprimer</a>
+                    </div>
+                </td>
+            </tr>
+        {% endfor %}
+            <tr>
+                <td><input type="text" id="nom-campus"></td>
+                <td><div class="flex-actions"><button id="add-campus">Ajouter</button></div></td>
+            </tr>
+        </tbody>
+    </table>
+{% endblock %}
+
+{% block title %}
+    Gérer campus
+{% endblock %}
+
