@@ -127,7 +127,7 @@ class SortieController extends AbstractController
             $this->addFlash('error', 'Accès interdit.');
             return $this->redirectToRoute('sortie_liste');
         }
-        $twig = 'detail.html.twig';
+        $twig = 'sortie/detail.html.twig';
         if ($this->mobileDetector->isMobile() && !$this->mobileDetector->isTablet()) {
             $twig = 'sortie/detail_mobile.html.twig';
         }
