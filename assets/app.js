@@ -6,10 +6,16 @@ import './bootstrap.js';
  * which should already be in your base.html.twig.
  */
 import './styles/app.css';
-import {AjaxRequest} from "./js/AjaxRequest.js";
+import './styles/mobile.css';
+import './styles/det.css';
+import {CampusService} from "./js/CampusService.js";
+import LieuMap from "./js/LieuMap.js";
 
 if (window.location.pathname.includes('sortie/detail')) {
-    AjaxRequest.getLieu();
+    LieuMap.getLieu();
 }
-
+if (window.location.pathname.includes('admin/campus')) {
+    CampusService.addCampus();
+    CampusService.editCampus();
+}
 console.log('This log comes from assets/app.js - welcome to AssetMapper! 🎉');

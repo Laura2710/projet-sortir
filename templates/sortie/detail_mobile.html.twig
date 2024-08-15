@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}Welcome!{% endblock %}</title>
+    <link rel="icon"
+          href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 128 128%22><text y=%221.2em%22 font-size=%2296%22>⚫️</text><text y=%221.3em%22 x=%220.2em%22 font-size=%2276%22 fill=%22%23fff%22>sf</text></svg>">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
+    <meta name=viewport content="width=device-width, initial-scale=1">
+
+    {% block stylesheets %}
+    {% endblock %}
+
+    {% block javascripts %}
+        {% block importmap %}{{ importmap('app') }}{% endblock %}
+    {% endblock %}
+</head>
+<body>
+<header>
+    <img src="{{ asset('images/logo_sortir.png') }}" alt="Logo Sortir" class="logo" />
+    <h1>Mes Sorties: {{ sortie.nom }}</h1>
+</header>
+
+<div class="details">
+    <p><strong>Nom:</strong> {{ sortie.nom }}</p>
+    <p><strong>Date et Heure:</strong> le {{ sortie.dateHeureDebut|date('d/m/Y') }} à {{ sortie.dateHeureDebut|date('H:i') }}</p>
+    <p><strong>Ville:</strong> {{ sortie.lieu.ville.nom }}</p>
+    <p><strong>Lieu:</strong> {{ sortie.lieu.nom }}</p>
+    <p><strong>Rue:</strong> {{ sortie.lieu.rue }}</p>
+    <p><strong>Code Postal:</strong> {{ sortie.lieu.ville.codePostal }}</p>
+    <p><strong>Latitude:</strong> {{ sortie.lieu.latitude|default('non renseignée') }}</p>
+    <p><strong>Longitude:</strong> {{ sortie.lieu.longitude|default('non renseignée') }}</p>
+    <p><strong>Clôture:</strong> {{ sortie.dateLimiteInscription|date('d/m/Y') }}</p>
+    <p><strong>Nombre de places:</strong> {{ sortie.nbInscriptionsMax }}</p>
+    <p><strong>Durée:</strong> {{ sortie.duree }} minutes</p>
+    <p><strong>Description et infos:</strong> {{ sortie.infosSortie }}</p>
+</div>
+
+<div class="participants">
+    <h2>Liste des inscrits:</h2>
+    <table>
+        <thead>
+        <tr>
+            <th>Nom</th>
+            <th>Ville</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% if sortie.participants is not empty %}
+            {% for participant in sortie.participants %}
+                <tr>
+                    <td>{{ participant.prenom }} {{ participant.nom }}</td>
+                    <td>{{ sortie.campus.nom }}</td>
+                </tr>
+            {% endfor %}
+        {% else %}
+            <tr>
+                <td colspan="2">Aucun participant</td>
+            </tr>
+        {% endif %}
+        </tbody>
+    </table>
+</div>
+</body>
+</html>

@@ -18,14 +18,21 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use MobileDetectBundle\DeviceDetector\MobileDetectorInterface;
 
 class SortieController extends AbstractController
 {
+    private $mobileDetector;
+
+    public function __construct(MobileDetectorInterface $mobileDetector)
+    {
+        $this->mobileDetector = $mobileDetector;
+    }
     #[Route('/', name: 'sortie_liste', methods: ['GET', 'POST'])]
     public function liste(Request $request, SortieRepository $sortieRepository, MajEtatSortie $majEtatSortie): Response
     {
         // Mise à jour de l'état des sortie
-        $majEtatSortie->mettreAjourEtatSortie();
+       $majEtatSortie->mettreAjourEtatSortie();
 
         $filtre = new FiltreSortie();
         $formulaire_filtre = $this->createForm(SortieFiltreType::class, $filtre);
@@ -44,7 +51,12 @@ class SortieController extends AbstractController
         }
 
 
-        return $this->render('sortie/liste.html.twig', [
+        $twig = 'sortie/liste.html.twig';
+        if ($this->mobileDetector->isMobile() && !$this->mobileDetector->isTablet()) {
+            $twig = 'inc/liste_sortiesmobile.html.twig';
+        }
+
+        return $this->render($twig, [
             'sorties' => $sorties,
             'formulaire_filtres' => $formulaire_filtre->createView(),
             'previous' => $offset - SortieRepository::SORTIE_PAR_PAGE,
@@ -84,7 +96,6 @@ class SortieController extends AbstractController
     }
 
 
-
     #[Route('/sortie/se-desister/{id}', name: 'se_desister',requirements: ['id'=>'\d+'], methods: ['GET'])]
     public function seDesister(Sortie $sortie, EntityManagerInterface $entityManager, EtatRepository $etatRepository): Response
     {
@@ -116,7 +127,12 @@ class SortieController extends AbstractController
             $this->addFlash('error', 'Accès interdit.');
             return $this->redirectToRoute('sortie_liste');
         }
-        return $this->render('sortie/detail.html.twig', [
+        $twig = 'detail.html.twig';
+        if ($this->mobileDetector->isMobile() && !$this->mobileDetector->isTablet()) {
+            $twig = 'sortie/detail_mobile.html.twig';
+        }
+
+        return $this->render ($twig,[
             'sortie' => $sortie,
         ]);
     }
@@ -239,12 +255,25 @@ class SortieController extends AbstractController
 
         if ($creerSortieForm->isSubmitted() && $creerSortieForm->isValid()) {
             $sortie->setOrganisateur($user);
-            $etat = $etatRepository->findOneBy(['libelle'=>EtatEnum::Creee]);
-            $sortie->setEtat($etat);
+            $action = $request->request->get('valider');
 
+            if($action == 'enregistrer'){
+                $etat = $etatRepository->findOneBy(['libelle'=>EtatEnum::Creee]);
+            } else {
+                $etat = $etatRepository->findOneBy(['libelle'=>EtatEnum::Ouverte]);
+
+            }
+
+            $sortie->setEtat($etat);
             $entityManager->persist($sortie);
             $entityManager->flush();
-            $this->addFlash('success', 'La sortie a bien été créée!');
+
+            if($action == 'enregistrer'){
+                $this->addFlash('success', 'La sortie a bien été créée!');
+            } else {
+                $this->addFlash('success', 'La sortie a bien été publiée!');
+            }
+
             return $this->redirectToRoute('sortie_liste');
         }
 
@@ -258,8 +287,10 @@ class SortieController extends AbstractController
     public function modifier(Request $request, Sortie $sortie, EntityManagerInterface $entityManager, LieuRepository $lieuRepository) : Response
     {
         $lieux = $lieuRepository->findAll();
-        // TODO comparer user avec organisateur
-        $user = $this->getUser();
+        if (!$this->isGranted('manage', $sortie) || $sortie == null) {
+            $this->addFlash('error', "Vous n'êtes pas autorisé à accéder à cette page");
+            return $this->redirectToRoute('sortie_liste');
+        }
 
         $creerSortieForm = $this->createForm(CreerSortieType::class, $sortie, ['lieus'=>$lieux, 'modeModif' => true]);
         $creerSortieForm->handleRequest($request);
@@ -272,6 +303,7 @@ class SortieController extends AbstractController
         return $this->render('sortie/creer.html.twig', [
             'modeModif'=> true,
             'creerSortieForm' => $creerSortieForm->createView(),
+            'sortie' => $sortie,
         ]);
     }
 

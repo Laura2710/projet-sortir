@@ -2,16 +2,14 @@
 
 namespace App\Controller;
 
-use App\Entity\Campus;
 use App\Entity\Participant;
 use App\Form\RegistrationFormType;
 use App\Form\UploadParticipantType;
 use App\Manager\ParticipantManagerInterface;
-use App\Repository\CampusRepository;
 use App\Repository\ParticipantRepository;
-use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
+use App\Service\CsvService;
+use App\Service\CsvValidator;
 use Doctrine\ORM\EntityManagerInterface;
-use League\Csv\Reader;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\Request;
@@ -20,8 +18,6 @@ use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Csrf\CsrfToken;
 use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
-use Symfony\Component\Validator\Constraints\File;
-use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 #[Route('/admin', name: 'admin_')]
 class AdminController extends AbstractController
@@ -35,54 +31,30 @@ class AdminController extends AbstractController
         ]);
     }
 
-
     #[Route('/utilisateurs/upload', name: 'utilisateurs_upload', methods: ['GET', 'POST'])]
     public function uploaderUtilisateurs(
         Request                     $request,
-        UserPasswordHasherInterface $passwordHasher,
-        CampusRepository            $campusRepository,
-        EntityManagerInterface      $entityManager,
-        ValidatorInterface          $validator): Response
+        CsvValidator                $csvValidator,
+        CsvService                  $csvService,
+        ParticipantManagerInterface $participantManager,
+    ): Response
     {
         $formUpload = $this->createForm(UploadParticipantType::class);
         $formUpload->handleRequest($request);
 
         if ($formUpload->isSubmitted() && $formUpload->isValid()) {
             $fichier = $formUpload->get('fichier_csv')->getData();
-            if ($fichier instanceof UploadedFile) {
-                if ($this->isCSV($validator, $fichier)) {
-                    $records = $this->lireDonneesCVS($fichier);
-                    $entityManager->beginTransaction();
-                    try {
-                        foreach ($records as $record) {
-                            $campus = $campusRepository->findOneBy(['nom' => $record['campus']]);
-                            if (!$campus) {
-                                $this->addFlash('error', "Le campus {$record['campus']} n'existe pas.");
-                                $entityManager->rollback();
-                                return $this->redirectToRoute('admin_utilisateurs_upload');
-                            }
-                            $participant = $this->getParticipant($record, $passwordHasher, $campus);
-                            $violations = $validator->validate($participant);
-                            if (count($violations) > 0) {
-                                $this->addFlash('error', "Le participant " . $participant->getPseudo() . " n'est pas valide");
-                                return $this->redirectToRoute('admin_utilisateurs_upload');
-                            }
-                            $entityManager->persist($participant);
-                        }
-                        $entityManager->flush();
-                        $entityManager->commit();
-                        $this->addFlash('success', "Les utilisateurs ont bien été ajoutés !");
-                        $this->redirectToRoute('admin_utilisateurs_upload');
-                    } catch (UniqueConstraintViolationException $e) {
-                        $this->addFlash('error', "L'opération a été annulée. Un participant avec l'email '{$record['email']}' existe déjà.");
-                        $entityManager->rollback();
-                    } catch (\Exception $e) {
-                        $this->addFlash('error', "Une erreur est survenue lors de l'ajout des participants.");
-                        $entityManager->rollback();
-                    }
+            if ($fichier instanceof UploadedFile && $csvValidator->validate($fichier)) {
+                $records = $csvService->lire($fichier);
+                $reponse = $participantManager->enregistrerParticipantsUpload($records);
+
+                if ($reponse[0] == "success") {
+                    $this->addFlash("success", $reponse[1]);
+                    return $this->redirectToRoute('admin_utilisateurs');
+                } else {
+                    $this->addFlash('error', $reponse[1]);
                 }
             }
-
         }
         return $this->render('admin/utilisateurs-upload.html.twig', [
             'formUpload' => $formUpload->createView()
@@ -171,57 +143,4 @@ class AdminController extends AbstractController
         return $this->redirectToRoute('admin_utilisateurs');
     }
 
-    private function getParticipant(mixed $record, UserPasswordHasherInterface $passwordHasher, Campus $campus): Participant
-    {
-        $participant = new Participant();
-        $participant->setNom(htmlspecialchars($record['nom']));
-        $participant->setPrenom(htmlspecialchars($record['prenom']));
-        $participant->setMail(htmlspecialchars($record['email']));
-        $participant->setPseudo(htmlspecialchars($record['pseudo']));
-        $participant->setTelephone(htmlspecialchars($record['telephone']));
-        $participant->setAdministrateur(false);
-        $participant->setActif(true);
-        $mdp = $record['password'];
-        $hashPassword = $passwordHasher->hashPassword($participant, $mdp);
-        $participant->setMotPasse($hashPassword);
-        $participant->setCampus($campus);
-        return $participant;
-    }
-
-    private function isCSV(ValidatorInterface $validator, mixed $fichier): bool
-    {
-        $violations = $validator->validate($fichier,
-            new File([
-                'maxSize' => '1000K',
-                'mimeTypes' => [
-                    'text/csv',
-                    'text/plain',
-                ],
-            ]));
-
-        if (count($violations) > 0) {
-            foreach ($violations as $violation) {
-                $this->addFlash('error', $violation->getMessage());
-            }
-            return false;
-        }
-        return true;
-    }
-
-    private function lireDonneesCVS(mixed $fichier): array
-    {
-        $csv = Reader::createFromPath($fichier->getRealPath(), 'r');
-        $csv->setHeaderOffset(0);
-        $csv->setDelimiter(';');
-        $records = $csv->getRecords();
-
-        // Filtrer les lignes vides
-        $recordsFiltres = [];
-        foreach ($records as $record) {
-            if (!empty(array_filter($record))) {
-                $recordsFiltres[] = $record;
-            }
-        }
-        return $recordsFiltres;
-    }
 }

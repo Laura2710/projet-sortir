@@ -39,7 +39,7 @@ class SortieFixtures extends Fixture implements OrderedFixtureInterface
 
         $datesACreer = [$dateDebutSortieOuverte, $dateDebutSortieEnCours, $dateTerminee, $datePassee];
 
-     for ($j = 0; $j < 15; $j++) {
+     for ($j = 0; $j < 10; $j++) {
          for ($i = 0; $i < count($datesACreer); $i++) {
              $sortie = new Sortie();
              $duree = 60;
