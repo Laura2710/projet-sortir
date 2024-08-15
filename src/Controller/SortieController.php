@@ -58,7 +58,6 @@ class SortieController extends AbstractController
 
         return $this->render($twig, [
             'sorties' => $sorties,
-            'formulaire_filtres' => $formulaire_filtre
             'formulaire_filtres' => $formulaire_filtre->createView(),
             'previous' => $offset - SortieRepository::SORTIE_PAR_PAGE,
             'next' => min(count($sorties), $offset + SortieRepository::SORTIE_PAR_PAGE),

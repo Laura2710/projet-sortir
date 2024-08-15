@@ -1,5 +1,5 @@
 mobile_detect:
   redirect:
-  detect_tablet_as_mobile: true
+    detect_tablet_as_mobile: true
   switch_device_view:
     save_referer_path: true
