@@ -17,6 +17,8 @@ use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Validator\Constraints\Image;
+use Symfony\Component\Validator\Constraints\Length;
+use Symfony\Component\Validator\Constraints\Regex;
 
 class ParticipantType extends AbstractType
 {
@@ -50,6 +52,18 @@ class ParticipantType extends AbstractType
                 'mapped' => false,
                 'first_options' => ['label' => 'Mot de passe'],
                 'second_options' => ['label' => 'Confirmation Mot de passe'],
+                'constraints' => [
+                    new Length([
+                        'min' => 6,
+                        'minMessage' => 'Le mot de passe doit contenir {{ limit }} caractères minimum',
+                        // max length allowed by Symfony for security reasons
+                        'max' => 50,
+                    ]),
+                    new Regex([
+                        'pattern' => '/^(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).+$/',
+                        'message' => 'Le mot de passe doit contenir au moins une majuscule, un chiffre et un caractère spécial',
+                    ])
+                ]
             ])
             ->add('campus', EntityType::class, [
                 'class' => Campus::class,
