@@ -14,6 +14,7 @@
             </div>
 
         {% else %}
+            <div class="centrer">
         <h1 class="h3 mb-3 font-weight-normal">Veuillez vous connecter</h1>
         <label for="username">Mail ou Pseudo</label>
         <input type="text" value="{{ last_username }}" name="_username" id="username" class="form-control" autocomplete="username" required autofocus>
@@ -29,9 +30,11 @@
             </div>
 
 
-        <button class="btn btn-lg btn-primary" type="submit">
+        <button class="btn btn-lg btn-primaire zoom" type="submit">
             Se connecter
         </button>
+                <a class="centrer btn btn-secondaire" href="{{ path('app_forgot_password_request') }}">Mot de passe oublié</a>
+            </div>
         {% endif %}
     </form>
 {% endblock %}
