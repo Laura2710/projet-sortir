@@ -119,6 +119,7 @@ class ResetPasswordController extends AbstractController
 
             $user->setMotPasse($encodedPassword);
             $this->entityManager->flush();
+            $this->addFlash('success', 'Mot de Passe mis à jour, veuillez vous connecter !');
 
             // The session is cleaned up after the password has been changed.
             $this->cleanSessionAfterReset();

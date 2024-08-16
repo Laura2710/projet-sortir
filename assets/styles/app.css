@@ -120,6 +120,7 @@ button a {
     background: hsl(340 100% 60% / 1);
     color: white;
     cursor: pointer;
+    text-decoration: none;
 }
 
 .zoom {
