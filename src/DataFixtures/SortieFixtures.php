@@ -37,33 +37,40 @@ class SortieFixtures extends Fixture implements OrderedFixtureInterface
         $datePassee = new \DateTime();
         $datePassee->modify('-1 month');
 
-        $datesACreer = [$dateDebutSortieOuverte, $dateDebutSortieEnCours, $dateTerminee, $datePassee];
+        // Use sortie Créée
+        $dateCreee = $faker->dateTimeBetween('+5 days', '+1 month');
+        $heureDebut = $faker->numberBetween(9, 22);
+        $dateCreee->setTime($heureDebut, 0);
 
-     for ($j = 0; $j < 10; $j++) {
-         for ($i = 0; $i < count($datesACreer); $i++) {
-             $sortie = new Sortie();
-             $duree = 60;
-             $organisateur = $faker->randomElement($participants);
-             $campus = $organisateur->getCampus();
-             $sortie->setOrganisateur($organisateur);
-             $sortie->setCampus($campus);
-             $sortie->setLieu($faker->randomElement($lieux));
-             $sortie->setNom($faker->randomElement($nomsSortie));
-             $sortie->setDuree($duree);
+        $datesACreer = [$dateDebutSortieOuverte, $dateDebutSortieEnCours, $dateTerminee, $datePassee, $dateCreee];
 
-             $randomDate = $datesACreer[$i];
-             $sortie->setDateHeureDebut($randomDate);
-             $dateCloture = clone $randomDate;
-             $dateCloture->modify('-1 day');
-             $sortie->setDateLimiteInscription($dateCloture);
+        foreach ($participants as $participant) {
+            for ($i = 0; $i < count($datesACreer); $i++) {
+                $sortie = new Sortie();
+                $duree = 60;
 
-             $sortie->setNbInscriptionsMax(8);
-             $sortie->setInfosSortie($faker->paragraph());
+                $campus = $participant->getCampus();
+                $sortie->setOrganisateur($participant);
 
-             $sortie->setEtat($manager->getRepository(Etat::class)->findOneBy(['libelle' => 'Ouverte']));
-             $manager->persist($sortie);
-         }
-     }
+                $sortie->setCampus($campus);
+                $sortie->setLieu($faker->randomElement($lieux));
+                $sortie->setNom($faker->randomElement($nomsSortie));
+                $sortie->setDuree($duree);
+
+                $randomDate = $datesACreer[$i];
+                $sortie->setDateHeureDebut($randomDate);
+                $dateCloture = clone $randomDate;
+                $dateCloture->modify('-1 day');
+                $sortie->setDateLimiteInscription($dateCloture);
+
+                $sortie->setNbInscriptionsMax(8);
+                $sortie->setInfosSortie($faker->paragraph());
+
+                $choix = ['Créée', 'Ouverte'];
+                $sortie->setEtat($manager->getRepository(Etat::class)->findOneBy(['libelle' => $faker->randomElement($choix)]));
+                $manager->persist($sortie);
+            }
+        }
 
         $manager->flush();
     }

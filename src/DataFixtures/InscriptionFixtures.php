@@ -15,18 +15,17 @@ class InscriptionFixtures extends Fixture implements OrderedFixtureInterface
         $sorties = $manager->getRepository(Sortie::class)->findAll();
         $participants = $manager->getRepository(Participant::class)->findAll();
 
-        // S'assurer qu'il y a au moins une sortie disponible pour inscription
-        $eligibleSorties = array_filter($sorties, function($sortie) {
-            return $sortie->getEtat()->getLibelle() != 'Créée'; // Enlever ->value car c'est une chaîne de caractères
-        });
-
         // Répartir les participants
         foreach ($participants as $participant) {
             $inscrit = false;
 
             // Vérifier les sorties disponibles pour ce participant
-            foreach ($eligibleSorties as $sortie) {
-                if ($sortie->getOrganisateur() !== $participant) {
+            foreach ($sorties as $sortie) {
+                // Vérifier si le participant n'est pas déjà inscrit à cette sortie
+                if ($sortie->getOrganisateur() !== $participant &&
+                    $sortie->getEtat()->getLibelle()->value != 'Créée' &&
+                    !$sortie->getParticipants()->contains($participant)) {
+
                     $sortie->addParticipant($participant);
                     $manager->persist($sortie);
                     $inscrit = true;
@@ -35,10 +34,16 @@ class InscriptionFixtures extends Fixture implements OrderedFixtureInterface
             }
 
             // Si le participant n'est pas inscrit, l'ajouter à la première sortie éligible
-            if (!$inscrit && !empty($eligibleSorties)) {
-                $firstEligibleSortie = reset($eligibleSorties);
-                $firstEligibleSortie->addParticipant($participant);
-                $manager->persist($firstEligibleSortie);
+            if (!$inscrit) {
+                foreach ($sorties as $sortie) {
+                    if ($sortie->getOrganisateur() !== $participant &&
+                        $sortie->getEtat()->getLibelle()->value != 'Créée') {
+
+                        $sortie->addParticipant($participant);
+                        $manager->persist($sortie);
+                        break;
+                    }
+                }
             }
         }
 
