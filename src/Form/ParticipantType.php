@@ -78,7 +78,9 @@ class ParticipantType extends AbstractType
                 "constraints" => [
                     new Image([
                         'mimeTypesMessage' => "Le format de fichier n'est pas autorisé.",
-                        "mimeTypes" => ["image/jpeg","image/png"]
+                        "mimeTypes" => ["image/jpeg","image/png"],
+                        'maxSize'=> 500000, // 500ko
+                        'maxSizeMessage' => "La taille du fichier est trop volumineuse (max 50ko)",
                     ])
                 ]
             ])

@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Entity\Participant;
 use App\Form\ParticipantType;
 use App\Repository\ParticipantRepository;
+use App\Service\FileUploadService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -17,55 +18,49 @@ use Symfony\Component\String\Slugger\SluggerInterface;
 class ParticipantController extends AbstractController
 {
     #[Route('/participant/{id}', name: 'participant_details', methods: ['GET', 'POST'])]
-    public function show(Participant $participantId,
-                         Request $request,
-                         ParticipantRepository $participantRepository,
-                         EntityManagerInterface $entityManager,
-                        UserPasswordHasherinterface $userPasswordHasher,
-                        SluggerInterface $slugger): Response
-    {
+    public function show(
+        Participant $participantId,
+        Request $request,
+        ParticipantRepository $participantRepository,
+        EntityManagerInterface $entityManager,
+        UserPasswordHasherInterface $userPasswordHasher,
+        FileUploadService $fileUploadService
+    ): Response {
         $participant = $participantRepository->findParticipantById($participantId);
-        if ($this->getUser() === $participant ){
+        if ($this->getUser() === $participant) {
             $participantForm = $this->createForm(ParticipantType::class, $participant);
             $participantForm->handleRequest($request);
 
+            // Si le formulaire est soumis et valide
             if ($participantForm->isSubmitted() && $participantForm->isValid()) {
-
+                // Upload de l'image si elle existe
                 $avatar = $participantForm->get('avatar')->getData();
                 if ($avatar) {
-                    $originalFilename = pathinfo($avatar->getClientOriginalName(), PATHINFO_FILENAME);
-                    $safeFilename = $slugger->slug($originalFilename);
-                    $newFilename = $safeFilename.'-'.uniqid().'.'.$avatar->guessExtension();
-
-                    $avatar->move($this->getParameter('upload_champ_entite_dir'), $newFilename);
-                    $participant->setAvatar($newFilename);
+                    try {
+                        $participant->setAvatar($fileUploadService->uploadImage($avatar, 'avatar'));
+                    } catch (\Exception $e) {
+                        $this->addFlash('error', 'Impossible de télécharger l\'image');
+                    }
                 }
-
+                // Mise à jour du mot de passe si modifié
                 if ($participantForm->get('motDePasse')->getData()) {
-                    $participant->setMotPasse(
-                        $userPasswordHasher->hashPassword(
-                            $participant,
-                            $participantForm->get('motDePasse')->getData()
-                        )
-                    );
-                };
-
-                $entityManager->persist($participant);;
+                    $participant->setMotPasse($userPasswordHasher->hashPassword($participant, $participantForm->get('motDePasse')->getData()));
+                }
+                // Mise à jour du participant
                 $entityManager->flush();
                 $this->addFlash('success', 'Profil mis à jour !');
-
+                $entityManager->refresh($this->getUser());
+                return $this->redirectToRoute('participant_details', ['id' => $participant->getId()]);
             }
-            $entityManager->refresh($this->getUser());
+
             return $this->render('participant/details.html.twig', [
                 'participant' => $participant,
                 'participantForm' => $participantForm->createView()
             ]);
-
-        }
-        else {
-            return $this->render('participant/details.html.twig',[
-                'participant' => $participant]);
         }
 
+        return $this->render('participant/details.html.twig', [
+            'participant' => $participant
+        ]);
     }
 }
